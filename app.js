@@ -1,6 +1,11 @@
 /* Sittic&Harb Radio · lógica de la web. Los contenidos están en datos.js */
 (function(){
   var A = NOTAS, P = PROGRAMAS, S = SITIO, CATS = SECCIONES, V = (typeof VIDEOS !== 'undefined' ? VIDEOS : []);
+  /* Las notas con video también cuentan como videos de su programa */
+  V = A.filter(function(a){ return a.video && !a.ejemplo; }).map(function(a){
+    var e = embed(a.video) || {};
+    return { titulo:a.titulo, programa:a.programa || '', red:e.red || 'Video', foto:a.foto || e.poster || '', fecha:a.fecha, nota:a.id };
+  }).concat(V);
   var igUser = (S.instagram || '').replace(/\/+$/, '').split('/').pop();
   var DM = igUser ? 'https://ig.me/m/' + igUser : S.instagram;
   var $ = function(s){ return document.querySelector(s); };
@@ -65,9 +70,9 @@
   /* ---------- Tarjeta de video (abre la publicación en la red) ---------- */
   var PLAY = '<span class="play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>';
   function vcard(v){
-    return '<a class="vcard" href="' + esc(v.link || S.instagram) + '" target="_blank" rel="noopener"><div class="ph v">' +
+    return '<a class="vcard" href="' + (v.nota ? '#/nota/' + v.nota : esc(v.link || S.instagram) + '" target="_blank" rel="noopener') + '"><div class="ph v">' +
       (v.foto ? '<img src="' + esc(v.foto) + '" alt="" loading="lazy" decoding="async">' : '<div class="wave" data-n="18" data-seed="' + (v.titulo.length) + '" aria-hidden="true"></div>') +
-      PLAY + '<span class="red">' + ICO[v.red || 'Instagram'] + esc(v.red || 'Instagram') + '</span></div>' +
+      PLAY + '<span class="red">' + (ICO[v.red] || '') + esc(v.red || 'Instagram') + '</span></div>' +
       '<div class="kicker">' + esc(v.programa) + '</div><h3>' + esc(v.titulo) + '</h3>' + (v.ejemplo ? '<p class="meta"><span class="ej">ejemplo</span></p>' : (v.fecha ? '<p class="meta">' + esc(v.fecha) + '</p>' : '')) + '</a>';
   }
 
@@ -125,7 +130,7 @@
     var a = byId(id); if (!a) return vNoEncontrado();
     var mas = A.filter(function(x){ return x.id != a.id && x.seccion === a.seccion; }).concat(A.filter(function(x){ return x.id != a.id && x.seccion !== a.seccion; })).slice(0, 4);
     return '<article class="view art"><button class="back" data-go="atras">‹ Volver</button>' +
-      '<p class="crumb"><a data-go="home">Sittic&amp;Harb</a> <span>›</span> <a data-go="cat:' + esc(a.seccion) + '">' + esc(a.seccion) + '</a></p>' +
+      '<p class="crumb"><a data-go="home">Sittic&amp;Harb</a> <span>›</span> <a data-go="cat:' + esc(a.seccion) + '">' + esc(a.seccion) + '</a>' + (a.programa ? ' <span>›</span> <a data-go="videos:' + esc(a.programa) + '">' + esc(a.programa) + '</a>' : '') + '</p>' +
       '<h1>' + esc(a.titulo) + '</h1><p class="dek">' + esc(a.bajada) + '</p>' +
       '<div class="by">' + meta(a) + '<button class="share" data-share="' + a.id + '"><svg viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6"/></svg>Compartir</button></div>' +
       media(a) +
@@ -151,7 +156,7 @@
     }).join('') + '</div>';
     return '<div class="view"><h1 class="vt">' + (prog ? esc(prog) : 'Videos') + '</h1>' + chips +
       (l.length ? '<div class="vgrid">' + l.map(vcard).join('') + '</div>' : '<p class="empty">Todavía no cargamos videos de este programa. Mientras tanto, están todos en <a class="u" href="' + esc(S.instagram) + '" target="_blank" rel="noopener">Instagram</a>.</p>') +
-      '<p class="meta" style="margin-top:22px">Cada video se abre en la red donde se publicó.</p></div>';
+      '<p class="meta" style="margin-top:22px">Los videos de Instagram y Facebook se abren en su red; los de las notas se ven acá.</p></div>';
   }
   function vRedes(){
     return '<div class="view"><h1 class="vt">Redes</h1><p class="intro">Los videos se publican primero en nuestras redes. Seguinos para no perderte ninguno.</p><div class="redes" style="margin-top:20px">' + redesData().map(rcard).join('') + '</div>' +

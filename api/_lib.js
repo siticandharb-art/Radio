@@ -2,7 +2,8 @@
 import crypto from 'node:crypto';
 import { put, list, del } from '@vercel/blob';
 
-const SECCIONES = ['Música', 'Entrevistas', 'Mundo', 'Actualidad', 'Comunidad'];
+export const SECCIONES_DEF = ['Música', 'Entrevistas', 'Mundo', 'Actualidad', 'Comunidad'];
+export const PROGRAMAS_DEF = ['Miradas', 'Voces del Mundo', 'UnArtículo', 'Happy'];
 const secret = () => crypto.createHash('sha256').update('radio-admin|' + (process.env.ADMIN_PASSWORD || '')).digest();
 const digest = (s) => crypto.createHash('sha256').update(String(s)).digest();
 
@@ -35,10 +36,14 @@ async function versiones() {
 
 export async function leer() {
   const [ultima] = await versiones();
-  if (!ultima) return { notas: [] };
+  if (!ultima) return { notas: [], programas: PROGRAMAS_DEF, secciones: SECCIONES_DEF };
   const r = await fetch(ultima.url, { cache: 'no-store' });
   const d = await r.json();
-  return { notas: Array.isArray(d.notas) ? d.notas : [] };
+  return {
+    notas: Array.isArray(d.notas) ? d.notas : [],
+    programas: limpiarLista(d.programas, PROGRAMAS_DEF, 0),
+    secciones: limpiarLista(d.secciones, SECCIONES_DEF, 1),
+  };
 }
 
 export async function guardar(data) {
@@ -52,14 +57,23 @@ export async function guardar(data) {
 const str = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 const urlHttp = (v) => { v = str(v, 800); return /^https?:\/\//i.test(v) ? v : ''; };
 
-export function limpiarNota(n) {
+export function limpiarLista(v, def, min) {
+  if (!Array.isArray(v)) return def;
+  const out = [];
+  for (const x of v) { const t = str(x, 40); if (t && !out.some((o) => o.toLowerCase() === t.toLowerCase())) out.push(t); }
+  const lista = out.slice(0, 20);
+  return lista.length < min ? def : lista;
+}
+
+export function limpiarNota(n, secciones = SECCIONES_DEF, programas = PROGRAMAS_DEF) {
   n = n && typeof n === 'object' ? n : {};
   const foto = str(n.foto, 800);
   return {
     id: Number(n.id) || Date.now(),
     titulo: str(n.titulo, 180) || 'Sin título',
     bajada: str(n.bajada, 420),
-    seccion: SECCIONES.includes(n.seccion) ? n.seccion : 'Actualidad',
+    seccion: secciones.includes(n.seccion) ? n.seccion : secciones[0],
+    programa: programas.includes(n.programa) ? n.programa : '',
     autor: str(n.autor, 80) || 'Redacción',
     fecha: str(n.fecha, 40),
     foto: /^img\/[\w.-]+$/.test(foto) ? foto : urlHttp(foto),

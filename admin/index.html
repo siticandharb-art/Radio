@@ -112,6 +112,14 @@ textarea{resize:vertical;min-height:120px;line-height:1.55}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .toast.err{background:var(--bad)}
 .back{background:none;border:0;font-weight:700;color:var(--gold);min-height:44px;padding:0;display:inline-flex;align-items:center;gap:6px}
+.org{display:grid;gap:16px;padding:18px 0 120px}
+.org h2{font:800 20px/1.2 var(--serif);margin-bottom:4px}
+.org .sub{color:var(--muted);font-size:14px;margin-bottom:14px}
+.orow{display:flex;gap:8px;margin-bottom:8px}
+.orow input{flex:1}
+.orow button{flex:none;width:52px;min-height:52px;border-radius:12px;border:1.5px solid var(--rule);background:var(--bg);color:var(--bad);font-size:18px}
+.oadd{display:flex;gap:8px;margin-top:12px}.oadd input{flex:1}
+.pill.pg{background:var(--rule);color:var(--fg)}
 dialog{border:0;border-radius:18px;padding:24px;max-width:380px;width:calc(100% - 32px);background:var(--card);color:var(--fg);box-shadow:var(--shadow)}
 dialog::backdrop{background:rgba(0,0,0,.55)}
 dialog h3{font:800 22px var(--serif);margin-bottom:8px}
@@ -144,10 +152,26 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
       <h1>Tus notas</h1>
       <p>Tocá <b>Nueva nota</b> para cargar un video con su título y su texto. Se publica en la web al instante.</p>
       <button class="btn gold big" id="bNueva">＋ Nueva nota</button>
+      <button class="btn big ghost" id="bOrg" style="margin-top:10px;min-height:48px;font-size:16px">⚙ Secciones y programas</button>
       <div class="stats" id="stats"></div>
     </section>
     <section class="list" id="list"></section>
   </div>
+</div>
+
+<!-- Secciones y programas -->
+<div id="vOrg" hidden>
+  <header class="bar"><div class="wrap">
+    <button class="back" id="bOrgVolver">‹ Volver a mis notas</button>
+    <strong style="font-family:var(--serif)">Secciones y programas</strong>
+  </div></header>
+  <div class="wrap"><div class="org">
+    <section class="step"><h2>Programas</h2><p class="sub">Series de videos, como “Voces del Mundo”. Cada nota con video aparece en la página de su programa.</p><div id="orgProg"></div>
+      <div class="oadd"><input type="text" id="addProg" maxlength="40" placeholder="Nuevo programa…"><button class="btn" id="bAddProg">Agregar</button></div></section>
+    <section class="step"><h2>Secciones</h2><p class="sub">Los temas de la web: Música, Mundo, etc. Aparecen en el menú de arriba.</p><div id="orgSec"></div>
+      <div class="oadd"><input type="text" id="addSec" maxlength="40" placeholder="Nueva sección…"><button class="btn" id="bAddSec">Agregar</button></div></section>
+  </div></div>
+  <div class="foot"><div class="wrap"><button class="btn gold" id="bOrgGuardar">Guardar cambios</button></div></div>
 </div>
 
 <!-- Editor -->
@@ -199,6 +223,10 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
           <div class="field"><span>Sección</span>
             <div class="chips" id="secs"></div>
           </div>
+          <div class="field"><span>Programa <small style="display:inline;font-weight:400">(opcional)</small></span>
+            <div class="chips" id="progs"></div>
+            <small>Si es de “Voces del Mundo”, “Miradas”, etc., elegilo acá y aparece en la página de ese programa.</small>
+          </div>
           <label class="field"><span>Firma</span><input type="text" id="autor" maxlength="80" placeholder="Redacción"></label>
         </section>
       </div>
@@ -220,14 +248,14 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
 
 <script>
 (function(){
-  var SECS = ['Música','Entrevistas','Mundo','Actualidad','Comunidad'];
+  var SECS = ['Música','Entrevistas','Mundo','Actualidad','Comunidad'], PROGS = ['Miradas','Voces del Mundo','UnArtículo','Happy'];
   var $ = function(s){ return document.querySelector(s); };
   var notas = [], cur = null, fotoUrl = '', token = '';
   try { token = localStorage.getItem('sh-admin') || ''; } catch(e){}
 
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function toast(m, bad){ var t = $('#toast'); t.textContent = m; t.className = 'toast on' + (bad ? ' err' : ''); clearTimeout(toast.t); toast.t = setTimeout(function(){ t.className = 'toast'; }, 3200); }
-  function show(id){ ['vLogin','vList','vEdit'].forEach(function(v){ $('#' + v).hidden = v !== id; }); window.scrollTo(0, 0); }
+  function show(id){ ['vLogin','vList','vEdit','vOrg'].forEach(function(v){ $('#' + v).hidden = v !== id; }); window.scrollTo(0, 0); }
   function hoy(){ return new Date().toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' }); }
 
   function api(path, opt){
@@ -261,6 +289,8 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     return { red:'' };
   }
 
+  function aplicar(d){ notas = d.notas || []; if (d.secciones && d.secciones.length) SECS = d.secciones; if (Array.isArray(d.programas)) PROGS = d.programas; }
+
   /* ---------- Lista ---------- */
   function drawList(){
     var pub = notas.filter(function(n){ return n.publicada !== false; }).length;
@@ -272,7 +302,7 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     $('#list').innerHTML = notas.map(function(n, i){
       var d = n.video ? detectar(n.video) : null, th = n.foto || (d && d.poster) || '';
       return '<article class="item"><div class="top"><div class="thumb" style="' + (th ? 'background-image:url(\'' + esc(th) + '\')' : '') + '">' + (d && d.red ? '<i>▶ ' + esc(d.red) + '</i>' : '') + '</div>' +
-        '<div><div class="meta"><span class="pill ' + (n.publicada !== false ? 'on">Publicada' : 'off">Borrador') + '</span><span>' + esc(n.seccion) + '</span></div>' +
+        '<div><div class="meta"><span class="pill ' + (n.publicada !== false ? 'on">Publicada' : 'off">Borrador') + '</span><span>' + esc(n.seccion) + '</span>' + (n.programa ? '<span class="pill pg">' + esc(n.programa) + '</span>' : '') + '</div>' +
         '<h3>' + esc(n.titulo) + '</h3><div class="meta">' + esc(n.fecha || 'Sin fecha') + '</div></div></div>' +
         '<div class="acts"><button class="btn sm gold" data-a="editar" data-i="' + i + '">Editar</button>' +
         (n.publicada !== false ? '<a class="btn sm" href="/#/nota/' + n.id + '" target="_blank" rel="noopener">Ver</a>' : '') +
@@ -282,10 +312,10 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     }).join('');
   }
   function guardarTodo(msg){
-    return api('/api/contenido', { method:'PUT', body: JSON.stringify({ notas: notas }) }).then(function(d){ notas = d.notas; drawList(); if (msg) toast(msg); });
+    return api('/api/contenido', { method:'PUT', body: JSON.stringify({ notas: notas, programas: PROGS, secciones: SECS }) }).then(function(d){ aplicar(d); drawList(); if (msg) toast(msg); });
   }
   function cargar(){
-    return api('/api/contenido?admin=1').then(function(d){ notas = d.notas || []; drawList(); show('vList'); });
+    return api('/api/contenido?admin=1').then(function(d){ aplicar(d); drawList(); show('vList'); });
   }
 
   /* ---------- Editor ---------- */
@@ -298,7 +328,9 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     var last = ''; try { last = localStorage.getItem('sh-autor') || ''; } catch(e){}
     $('#autor').value = cur.autor || last || 'Redacción';
     fotoUrl = cur.foto || '';
-    $('#secs').innerHTML = SECS.map(function(s){ return '<label><input type="radio" name="sec" value="' + s + '"' + ((cur.seccion || 'Entrevistas') === s ? ' checked' : '') + '><span>' + s + '</span></label>'; }).join('');
+    var sec0 = SECS.indexOf(cur.seccion) >= 0 ? cur.seccion : SECS[Math.max(0, SECS.indexOf('Entrevistas'))];
+    $('#secs').innerHTML = SECS.map(function(s){ return '<label><input type="radio" name="sec" value="' + esc(s) + '"' + (sec0 === s ? ' checked' : '') + '><span>' + esc(s) + '</span></label>'; }).join('');
+    $('#progs').innerHTML = [''].concat(PROGS).map(function(g){ return '<label><input type="radio" name="prog" value="' + esc(g) + '"' + ((cur.programa || '') === g ? ' checked' : '') + '><span>' + (g ? esc(g) : 'Ninguno') + '</span></label>'; }).join('');
     $('#bPublicar').textContent = cur.publicada ? 'Guardar cambios' : 'Publicar';
     $('#bBorrador').hidden = !!cur.publicada;
     drawFoto(); drawChk(); drawPrev(); show('vEdit');
@@ -318,12 +350,12 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     $('#fotoHint').textContent = fotoUrl ? 'Esta es la portada que elegiste.' : (d && d.poster ? 'Se usa la miniatura de YouTube. Podés subir otra si querés.' : 'Es la imagen que se ve antes de tocar el play.');
   }
   function leerForm(){
-    var sec = document.querySelector('input[name=sec]:checked');
+    var sec = document.querySelector('input[name=sec]:checked'), prog = document.querySelector('input[name=prog]:checked');
     return {
       id: cur.id, creada: cur.creada, fecha: cur.fecha || '',
       titulo: $('#titulo').value.trim(), bajada: $('#bajada').value.trim(), video: $('#video').value.trim(), foto: fotoUrl,
       texto: $('#texto').value.split(/\n\s*\n/).map(function(p){ return p.replace(/\s*\n\s*/g, ' ').trim(); }).filter(Boolean),
-      seccion: sec ? sec.value : 'Entrevistas', autor: $('#autor').value.trim() || 'Redacción'
+      seccion: sec ? sec.value : SECS[0], programa: prog ? prog.value : '', autor: $('#autor').value.trim() || 'Redacción'
     };
   }
   function drawPrev(){
@@ -331,7 +363,7 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     var vid = n.video
       ? '<div class="vid' + (d && d.vert ? ' v' : '') + '" style="' + (poster ? 'background-image:url(\'' + esc(poster) + '\')' : '') + '"><em><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></em></div>'
       : (poster ? '<div class="vid" style="background-image:url(\'' + esc(poster) + '\')"></div>' : '<div class="vid none">Acá va el video</div>');
-    $('#prevCard').innerHTML = '<div class="k">' + esc(n.seccion) + '</div><h3>' + (esc(n.titulo) || '<span style="color:var(--muted)">Tu título</span>') + '</h3>' +
+    $('#prevCard').innerHTML = '<div class="k">' + esc(n.seccion) + (n.programa ? ' · ' + esc(n.programa) : '') + '</div><h3>' + (esc(n.titulo) || '<span style="color:var(--muted)">Tu título</span>') + '</h3>' +
       (n.bajada ? '<p class="dek">' + esc(n.bajada) + '</p>' : '') + vid +
       '<div class="txt">' + (n.texto.length ? n.texto.slice(0, 3).map(function(p){ return '<p>' + esc(p) + '</p>'; }).join('') + (n.texto.length > 3 ? '<p class="hint">…</p>' : '') : '<p class="hint">Acá abajo va el texto de la nota.</p>') + '</div>';
   }
@@ -367,6 +399,52 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     });
   }
 
+  /* ---------- Secciones y programas ---------- */
+  var org = { prog: [], sec: [] };
+  function drawOrg(){
+    [['prog', '#orgProg'], ['sec', '#orgSec']].forEach(function(k){
+      $(k[1]).innerHTML = org[k[0]].length ? org[k[0]].map(function(it, i){
+        return '<div class="orow"><input type="text" maxlength="40" value="' + esc(it.n) + '" data-k="' + k[0] + '" data-i="' + i + '" aria-label="Nombre"><button type="button" data-del="' + k[0] + ':' + i + '" aria-label="Quitar">✕</button></div>';
+      }).join('') : '<p style="color:var(--muted);font-size:14px">Todavía no hay ninguno.</p>';
+    });
+  }
+  function abrirOrg(){
+    org.prog = PROGS.map(function(n){ return { o: n, n: n }; }); org.sec = SECS.map(function(n){ return { o: n, n: n }; });
+    $('#addProg').value = $('#addSec').value = ''; drawOrg(); show('vOrg');
+  }
+  function agregarOrg(k, inp){
+    var v = inp.value.trim(); if (!v) return;
+    if (org[k].some(function(x){ return x.n.toLowerCase() === v.toLowerCase(); })){ toast('Ya existe “' + v + '”', true); return; }
+    org[k].push({ o: null, n: v }); inp.value = ''; drawOrg();
+  }
+  function guardarOrg(){
+    var secs = [], progs = [], renS = {}, renP = {}, delS = {}, delP = {};
+    function lim(arr, out, ren, del){
+      var vistos = {};
+      arr.forEach(function(it){ var n = it.n.trim(); if (!n || vistos[n.toLowerCase()]){ if (it.o) del[it.o] = 1; return; } vistos[n.toLowerCase()] = 1; out.push(n); if (it.o && it.o !== n) ren[it.o] = n; });
+    }
+    lim(org.sec, secs, renS, delS); lim(org.prog, progs, renP, delP);
+    if (!secs.length){ toast('Dejá al menos una sección', true); return; }
+    notas.forEach(function(n){
+      if (renS[n.seccion]) n.seccion = renS[n.seccion]; else if (delS[n.seccion] || secs.indexOf(n.seccion) < 0) n.seccion = secs[0];
+      if (n.programa){ if (renP[n.programa]) n.programa = renP[n.programa]; else if (delP[n.programa] || progs.indexOf(n.programa) < 0) n.programa = ''; }
+    });
+    SECS = secs; PROGS = progs; var b = $('#bOrgGuardar'); b.disabled = true;
+    guardarTodo('Cambios guardados ✓').then(function(){ show('vList'); }).catch(function(e){ toast(e.message, true); cargar().catch(function(){}); }).then(function(){ b.disabled = false; });
+  }
+  $('#bOrg').onclick = abrirOrg;
+  $('#bOrgVolver').onclick = function(){ show('vList'); };
+  $('#bOrgGuardar').onclick = guardarOrg;
+  $('#bAddProg').onclick = function(){ agregarOrg('prog', $('#addProg')); };
+  $('#bAddSec').onclick = function(){ agregarOrg('sec', $('#addSec')); };
+  ['addProg','addSec'].forEach(function(id){ $('#' + id).addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); $('#' + (id === 'addProg' ? 'bAddProg' : 'bAddSec')).click(); } }); });
+  $('#vOrg').addEventListener('input', function(e){ var t = e.target; if (t.dataset && t.dataset.k) org[t.dataset.k][+t.dataset.i].n = t.value; });
+  $('#vOrg').addEventListener('click', function(e){
+    var b = e.target.closest('[data-del]'); if (!b) return; var p = b.getAttribute('data-del').split(':');
+    if (p[0] === 'sec' && org.sec.length <= 1){ toast('Tiene que quedar al menos una sección', true); return; }
+    org[p[0]].splice(+p[1], 1); drawOrg();
+  });
+
   /* ---------- Sesión ---------- */
   function salir(silencio){
     token = ''; try { localStorage.removeItem('sh-admin'); } catch(e){}
@@ -388,7 +466,7 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
   $('#bBorrador').onclick = function(){ guardarNota(false); };
   ['titulo','bajada','texto','autor'].forEach(function(id){ $('#' + id).addEventListener('input', drawPrev); });
   $('#video').addEventListener('input', function(){ drawChk(); drawFoto(); drawPrev(); });
-  $('#secs').addEventListener('change', drawPrev);
+  $('#secs').addEventListener('change', drawPrev); $('#progs').addEventListener('change', drawPrev);
   $('#fotoQuitar').onclick = function(){ fotoUrl = ''; drawFoto(); drawChk(); drawPrev(); };
   $('#fotoIn').addEventListener('change', function(){
     var f = this.files[0]; this.value = ''; if (!f) return;

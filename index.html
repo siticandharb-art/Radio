@@ -383,9 +383,15 @@
   function start(){ if (started) return; started = true; var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
   var t = setTimeout(start, 2500);
   fetch('/api/contenido', { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
-    var real = d && Array.isArray(d.notas) ? d.notas : [];
+    if (!d) return;
+    if (Array.isArray(d.secciones) && d.secciones.length) window.SECCIONES = d.secciones;
+    if (Array.isArray(d.programas)) {
+      var base = {}; PROGRAMAS.forEach(function(p){ base[p.nombre] = p; });
+      window.PROGRAMAS = d.programas.map(function(n){ return base[n] || { nombre: n, foto: '', descripcion: '' }; });
+    }
+    var real = Array.isArray(d.notas) ? d.notas : [];
     if (!real.length) return;
-    var ej = NOTAS.slice(), out = real.slice();
+    var ej = NOTAS.filter(function(n){ return SECCIONES.indexOf(n.seccion) >= 0; }), out = real.slice();
     for (var i = 0; out.length < 10 && i < ej.length; i++) out.push(ej[i]);
     window.NOTAS = out;
   }).catch(function(){}).then(function(){ clearTimeout(t); start(); });
