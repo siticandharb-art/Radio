@@ -71,6 +71,38 @@
       '<div class="kicker">' + esc(v.programa) + '</div><h3>' + esc(v.titulo) + '</h3>' + (v.ejemplo ? '<p class="meta"><span class="ej">ejemplo</span></p>' : (v.fecha ? '<p class="meta">' + esc(v.fecha) + '</p>' : '')) + '</a>';
   }
 
+
+  /* ---------- Video de la nota: se previsualiza ahí mismo ---------- */
+  function embed(u){
+    u = String(u || ''); var m;
+    if ((m = u.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/)))
+      return { t:'iframe', red:'YouTube', vert:/\/shorts\//.test(u), src:'https://www.youtube.com/embed/' + m[1] + '?autoplay=1&rel=0&playsinline=1', poster:'https://i.ytimg.com/vi/' + m[1] + '/hqdefault.jpg' };
+    if ((m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/)))
+      return { t:'iframe', red:'Vimeo', src:'https://player.vimeo.com/video/' + m[1] + '?autoplay=1' };
+    if ((m = u.match(/instagram\.com\/(?:[\w.]+\/)?(p|reels?|tv)\/([\w-]+)/)))
+      return { t:'iframe', red:'Instagram', vert:true, src:'https://www.instagram.com/' + (m[1] === 'reels' ? 'reel' : m[1]) + '/' + m[2] + '/embed/' };
+    if (/facebook\.com|fb\.watch|fb\.com/.test(u))
+      return { t:'iframe', red:'Facebook', vert:/\/reel\//.test(u), src:'https://www.facebook.com/plugins/video.php?show_text=false&autoplay=true&href=' + encodeURIComponent(u) };
+    if (/\.(mp4|webm|mov)(\?|#|$)/i.test(u)) return { t:'video', red:'Video', src:u };
+    return null;
+  }
+  function media(a){
+    var e = a.video ? embed(a.video) : null;
+    if (!a.video) return ph(a.id + 2, 50, a.foto, true);
+    if (!e) return ph(a.id + 2, 50, a.foto, true) + '<a class="btn-line" href="' + esc(a.video) + '" target="_blank" rel="noopener" style="margin-bottom:20px">Ver el video ›</a>';
+    var poster = a.foto || e.poster;
+    return '<button type="button" class="vplay' + (e.vert ? ' v' : '') + '" data-vp="1" aria-label="Reproducir el video: ' + esc(a.titulo) + '">' +
+      (poster ? '<img src="' + esc(poster) + '" alt="" fetchpriority="high" decoding="async">' : '<div class="wave" data-n="40" data-seed="' + a.id + '" aria-hidden="true"></div>') +
+      '<span class="pb"><span>' + '<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' + '</span></span><span class="tag">' + esc(e.red) + '</span></button>';
+  }
+  function playVideo(btn){
+    var a = byId(cur.a), e = a && embed(a.video); if (!e || btn.classList.contains('on')) return;
+    btn.classList.add('on'); btn.removeAttribute('data-vp'); btn.setAttribute('aria-label', 'Video');
+    btn.innerHTML = e.t === 'video'
+      ? '<video src="' + esc(e.src) + '" controls autoplay playsinline' + (a.foto ? ' poster="' + esc(a.foto) + '"' : '') + '></video>'
+      : '<iframe src="' + esc(e.src) + '" title="' + esc(a.titulo) + '" allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write" allowfullscreen scrolling="no" referrerpolicy="origin-when-cross-origin"></iframe>';
+  }
+
   /* ---------- Vistas ---------- */
   function vHome(){
     var lead = A[0], p1 = A[2] || A[1], p2 = A[5] || A[3];
@@ -96,9 +128,8 @@
       '<p class="crumb"><a data-go="home">Sittic&amp;Harb</a> <span>›</span> <a data-go="cat:' + esc(a.seccion) + '">' + esc(a.seccion) + '</a></p>' +
       '<h1>' + esc(a.titulo) + '</h1><p class="dek">' + esc(a.bajada) + '</p>' +
       '<div class="by">' + meta(a) + '<button class="share" data-share="' + a.id + '"><svg viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6"/></svg>Compartir</button></div>' +
-      ph(a.id+2, 50, a.foto, true) +
+      media(a) +
       '<div class="txt">' + (a.texto || []).map(function(x){ return '<p>' + esc(x) + '</p>'; }).join('') + '</div>' +
-      (a.video ? '<a class="btn-line" href="' + esc(a.video) + '" target="_blank" rel="noopener">Ver el video ›</a>' : '') +
       '<div class="sh" style="margin-top:34px"><h2>Más notas</h2></div>' + mas.map(row).join('') + '</article>';
   }
   function vCat(c){
@@ -258,6 +289,7 @@
 
   /* ---------- Clicks ---------- */
   document.addEventListener('click', function(e){
+    var vp = e.target.closest('[data-vp]'); if (vp){ playVideo(vp); return; }
     var t = e.target.closest('[data-go],[data-q],[data-share],#temaM'); if (!t) return;
     if (t.id === 'temaM'){ toggleTheme(); return; }
     if (t.hasAttribute('data-q')){ q.value = t.getAttribute('data-q'); drawOv(); q.focus(); return; }

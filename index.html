@@ -135,6 +135,17 @@
   .art .dek{font-size:19px;line-height:1.5;color:var(--muted);margin-bottom:16px}
   .art .by{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-block:1px solid var(--rule);margin-bottom:18px}
   .art .ph{aspect-ratio:16/10;margin-bottom:20px}
+  .vplay{position:relative;display:block;width:100%;aspect-ratio:16/9;background:#0b0b0b;border:0;padding:0;margin:0 0 20px;cursor:pointer;overflow:hidden;color:#fff;font:inherit}
+  .vplay.v{width:min(100%,380px);aspect-ratio:9/16;margin:0 auto 20px}
+  .vplay>img{width:100%;height:100%;object-fit:cover;display:block}
+  .vplay .wave{position:absolute;inset:0}
+  .vplay .pb{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(transparent 55%,rgba(0,0,0,.45))}
+  .vplay .pb span{width:76px;height:76px;border-radius:50%;background:var(--gold-bg);display:grid;place-items:center;box-shadow:0 6px 24px rgba(0,0,0,.45);transition:transform .15s}
+  .vplay:hover .pb span{transform:scale(1.07)}
+  .vplay .pb svg{width:30px;height:30px;fill:var(--on-gold);margin-left:4px}
+  .vplay .tag{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.72);color:#fff;font:600 12px/1 var(--sans);padding:6px 10px;border-radius:99px}
+  .vplay iframe,.vplay video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+  .vplay.on{cursor:default}
   .art .txt p{font-size:18px;line-height:1.7;margin-bottom:18px;max-width:68ch}
   .share{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--fg);border-radius:6px;padding:11px 16px;font:700 13px/1 var(--sans);letter-spacing:.04em;text-transform:uppercase}
   .share svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -365,6 +376,20 @@
 <div class="toast" id="toast" role="status"></div>
 
 <script src="datos.js"></script>
-<script src="app.js"></script>
+<script>
+/* Carga las notas publicadas desde el panel (/admin) y recién después arranca la web. Si falla, se ven las de datos.js. */
+(function(){
+  var started = false;
+  function start(){ if (started) return; started = true; var s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s); }
+  var t = setTimeout(start, 2500);
+  fetch('/api/contenido', { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+    var real = d && Array.isArray(d.notas) ? d.notas : [];
+    if (!real.length) return;
+    var ej = NOTAS.slice(), out = real.slice();
+    for (var i = 0; out.length < 10 && i < ej.length; i++) out.push(ej[i]);
+    window.NOTAS = out;
+  }).catch(function(){}).then(function(){ clearTimeout(t); start(); });
+})();
+</script>
 </body>
 </html>

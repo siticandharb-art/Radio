@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel · Sittic&Harb Radio</title>
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f4f2;--card:#fff;--fg:#111;--muted:#5c5c5c;--rule:#e4e4e0;--gold:#8f6b12;--gold-bg:#e2c36a;--on-gold:#17120a;--ok:#14733a;--ok-bg:#e1f3e8;--warn:#8a5a00;--warn-bg:#fff0cf;--bad:#b3261e;--shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.07);--serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0b0b0b;--card:#171716;--fg:#f3f3f1;--muted:#b0b0aa;--rule:#2a2a27;--gold:#d8b968;--gold-bg:#d8b968;--ok:#6fd49a;--ok-bg:#12301f;--warn:#f0c46a;--warn-bg:#33270c;--bad:#ff8a80;--shadow:0 1px 2px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.5);color-scheme:dark}}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--sans);min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+.bar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--rule)}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px}
+.logo{display:flex;align-items:center;gap:10px;font:800 17px/1.1 var(--serif)}
+.logo img{width:34px;height:34px;border-radius:8px}
+.logo small{display:block;font:600 11px var(--sans);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:12px;border:1px solid var(--rule);background:var(--card);font-weight:600}
+.btn.gold{background:var(--gold-bg);color:var(--on-gold);border-color:transparent}
+.btn.big{min-height:56px;font-size:18px;width:100%}
+.btn.sm{min-height:40px;padding:0 14px;font-size:14px;border-radius:10px}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:default}
+a.btn{color:inherit;text-decoration:none}
+a.btn.gold{color:var(--on-gold)}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--gold-bg);outline-offset:2px}
+
+/* Login */
+.login{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.login .box{width:100%;max-width:400px;background:var(--card);border-radius:20px;padding:32px 24px;box-shadow:var(--shadow);text-align:center}
+.login img{width:64px;height:64px;border-radius:14px;margin-bottom:14px}
+.login h1{font:800 28px/1.15 var(--serif);margin-bottom:6px}
+.login p{color:var(--muted);margin-bottom:22px}
+.field{display:block;text-align:left}
+.field>span{display:block;font-weight:700;margin-bottom:6px}
+.field small{display:block;color:var(--muted);margin-top:6px;font-size:14px}
+input[type=text],input[type=password],input[type=url],textarea,select{width:100%;min-height:52px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--rule);background:var(--bg);font-size:17px}
+textarea{resize:vertical;min-height:120px;line-height:1.55}
+.err{color:var(--bad);font-weight:600;margin-top:12px;min-height:1.4em}
+
+/* Lista */
+.hero{padding:22px 0 8px}
+.hero h1{font:800 clamp(26px,6vw,36px)/1.1 var(--serif)}
+.hero p{color:var(--muted);margin:6px 0 16px}
+.stats{display:flex;gap:10px;margin:16px 0 22px;flex-wrap:wrap}
+.stat{background:var(--card);border-radius:12px;padding:10px 16px;box-shadow:var(--shadow);font-size:14px;color:var(--muted)}
+.stat b{display:block;font-size:22px;color:var(--fg);line-height:1.1}
+.list{display:grid;gap:12px;padding-bottom:40px}
+.item{background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.item .top{display:grid;grid-template-columns:96px 1fr;gap:14px;padding:14px}
+.thumb{width:96px;height:96px;border-radius:10px;background:var(--rule) center/cover;position:relative;overflow:hidden}
+.thumb i{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.7);color:#fff;font:700 10px/1 var(--sans);padding:4px 6px;border-radius:6px;font-style:normal}
+.item h3{font:700 18px/1.25 var(--serif);margin:4px 0 6px;overflow-wrap:anywhere}
+.meta{font-size:13px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px}
+.pill.on{background:var(--ok-bg);color:var(--ok)}
+.pill.off{background:var(--warn-bg);color:var(--warn)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 14px}
+.empty{text-align:center;background:var(--card);border-radius:16px;padding:40px 20px;box-shadow:var(--shadow)}
+.empty b{display:block;font:800 22px var(--serif);margin-bottom:6px}
+.empty p{color:var(--muted);margin-bottom:18px}
+
+/* Editor */
+.ed{display:grid;gap:18px;padding:18px 0 140px}
+@media(min-width:900px){.ed{grid-template-columns:minmax(0,1fr) 380px;align-items:start}.prev{position:sticky;top:78px}}
+.steps{display:grid;gap:16px}
+.step{background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.step h2{display:flex;align-items:center;gap:10px;font:800 19px/1.2 var(--serif);margin-bottom:14px}
+.step h2 b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--gold-bg);color:var(--on-gold);font:700 14px var(--sans);flex:none}
+.step .field+.field{margin-top:14px}
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;font-weight:600;min-height:24px}
+.chk.ok{color:var(--ok)}.chk.warn{color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{cursor:pointer}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips span{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:99px;border:1.5px solid var(--rule);font-weight:600;background:var(--bg)}
+.chips input:checked+span{background:var(--gold-bg);color:var(--on-gold);border-color:transparent}
+.chips input:focus-visible+span{outline:3px solid var(--gold-bg);outline-offset:2px}
+.photo{display:grid;gap:12px}
+.photo .pv{aspect-ratio:16/9;border-radius:12px;background:var(--bg) center/cover;border:1.5px dashed var(--rule);display:grid;place-items:center;color:var(--muted);font-size:14px;text-align:center;padding:10px}
+.photo .pv.has{border-style:solid}
+.photo .row{display:flex;gap:8px;flex-wrap:wrap}
+.foot{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--rule);padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:20}
+.foot .wrap{display:flex;gap:10px;padding:0}
+.foot .btn{flex:1}
+.foot .btn.gold{flex:1.4}
+.prev h4{font:700 12px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.prev .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.prev .k{font:700 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.prev h3{font:800 24px/1.12 var(--serif);margin-bottom:8px;overflow-wrap:anywhere}
+.prev .dek{color:var(--muted);margin-bottom:12px;font-size:15px}
+.prev .vid{aspect-ratio:16/9;border-radius:10px;background:#0b0b0b center/cover;display:grid;place-items:center;margin-bottom:12px;position:relative;overflow:hidden}
+.prev .vid.v{aspect-ratio:9/12}
+.prev .vid em{width:56px;height:56px;border-radius:50%;background:var(--gold-bg);display:grid;place-items:center}
+.prev .vid svg{width:24px;fill:var(--on-gold);margin-left:3px}
+.prev .vid.none{background:var(--bg);border:1.5px dashed var(--rule);color:var(--muted);font-size:13px}
+.prev .txt p{font-size:15px;line-height:1.65;margin-bottom:10px;overflow-wrap:anywhere}
+.prev .hint{color:var(--muted);font-size:13px}
+@media(max-width:899px){.prev{order:-1;display:none}}
+
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;padding:12px 20px;border-radius:99px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:50;width:max-content;max-width:92vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.toast.err{background:var(--bad)}
+.back{background:none;border:0;font-weight:700;color:var(--gold);min-height:44px;padding:0;display:inline-flex;align-items:center;gap:6px}
+dialog{border:0;border-radius:18px;padding:24px;max-width:380px;width:calc(100% - 32px);background:var(--card);color:var(--fg);box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+dialog h3{font:800 22px var(--serif);margin-bottom:8px}
+dialog p{color:var(--muted);margin-bottom:18px}
+dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
+</style>
+</head>
+<body>
+
+<!-- Entrar -->
+<main class="login" id="vLogin" hidden>
+  <form class="box" id="fLogin" autocomplete="on">
+    <img src="../img/favicon.png" alt="">
+    <h1>Panel de la radio</h1>
+    <p>Entrá con tu contraseña para cargar notas y videos.</p>
+    <label class="field"><span>Contraseña</span><input type="password" id="pw" autocomplete="current-password" required></label>
+    <button class="btn gold big" id="bLogin" style="margin-top:16px">Entrar</button>
+    <div class="err" id="eLogin" role="alert"></div>
+  </form>
+</main>
+
+<!-- Lista de notas -->
+<div id="vList" hidden>
+  <header class="bar"><div class="wrap">
+    <div class="logo"><img src="../img/favicon.png" alt=""><div>Sittic&amp;Harb<small>Panel</small></div></div>
+    <div style="display:flex;gap:8px"><a class="btn sm ghost" href="/" target="_blank" rel="noopener">Ver la web</a><button class="btn sm ghost" id="bSalir">Salir</button></div>
+  </div></header>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Tus notas</h1>
+      <p>Tocá <b>Nueva nota</b> para cargar un video con su título y su texto. Se publica en la web al instante.</p>
+      <button class="btn gold big" id="bNueva">＋ Nueva nota</button>
+      <div class="stats" id="stats"></div>
+    </section>
+    <section class="list" id="list"></section>
+  </div>
+</div>
+
+<!-- Editor -->
+<div id="vEdit" hidden>
+  <header class="bar"><div class="wrap">
+    <button class="back" id="bVolver">‹ Volver a mis notas</button>
+    <strong id="edTitulo" style="font-family:var(--serif)">Nueva nota</strong>
+  </div></header>
+  <div class="wrap">
+    <div class="ed">
+      <div class="steps">
+        <section class="step">
+          <h2><b>1</b>Título de la nota</h2>
+          <label class="field"><span>¿De qué trata?</span><input type="text" id="titulo" maxlength="180" placeholder="Ej: Una charla sobre los discos que nunca pasan de moda"></label>
+          <label class="field"><span>Resumen corto <small style="display:inline;font-weight:400">(opcional)</small></span><textarea id="bajada" maxlength="420" style="min-height:84px" placeholder="Una o dos frases que cuenten de qué va."></textarea></label>
+        </section>
+
+        <section class="step">
+          <h2><b>2</b>El video</h2>
+          <label class="field"><span>Pegá el link del video</span>
+            <input type="url" id="video" inputmode="url" placeholder="https://www.youtube.com/watch?v=…">
+            <small>Sirve de YouTube, Instagram, Facebook o Vimeo. En la publicación tocá “Compartir” o los tres puntitos y “Copiar enlace”.</small>
+          </label>
+          <div class="chk" id="vChk"></div>
+        </section>
+
+        <section class="step">
+          <h2><b>3</b>Foto de portada</h2>
+          <div class="photo">
+            <div class="pv" id="fotoPv">Todavía no hay foto</div>
+            <div class="row">
+              <label class="btn" style="cursor:pointer">📷 Elegir foto<input type="file" id="fotoIn" accept="image/*" hidden></label>
+              <button class="btn danger" id="fotoQuitar" hidden>Quitar</button>
+            </div>
+            <small style="color:var(--muted)" id="fotoHint">Es la imagen que se ve antes de tocar el play. Con YouTube se pone sola.</small>
+          </div>
+        </section>
+
+        <section class="step">
+          <h2><b>4</b>El texto</h2>
+          <label class="field"><span>Escribí o pegá la nota</span>
+            <textarea id="texto" style="min-height:240px" placeholder="Escribí acá la nota…&#10;&#10;Dejá una línea en blanco para empezar un párrafo nuevo."></textarea>
+            <small>Dejá una línea en blanco entre párrafos.</small>
+          </label>
+        </section>
+
+        <section class="step">
+          <h2><b>5</b>Detalles</h2>
+          <div class="field"><span>Sección</span>
+            <div class="chips" id="secs"></div>
+          </div>
+          <label class="field"><span>Firma</span><input type="text" id="autor" maxlength="80" placeholder="Redacción"></label>
+        </section>
+      </div>
+
+      <aside class="prev" id="prev">
+        <h4>Así se va a ver</h4>
+        <div class="card" id="prevCard"></div>
+      </aside>
+    </div>
+  </div>
+  <div class="foot"><div class="wrap">
+    <button class="btn" id="bBorrador">Guardar borrador</button>
+    <button class="btn gold" id="bPublicar">Publicar</button>
+  </div></div>
+</div>
+
+<dialog id="dlg"><h3 id="dT"></h3><p id="dP"></p><div class="row"><button class="btn" id="dNo">Cancelar</button><button class="btn gold" id="dSi">Sí</button></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  var SECS = ['Música','Entrevistas','Mundo','Actualidad','Comunidad'];
+  var $ = function(s){ return document.querySelector(s); };
+  var notas = [], cur = null, fotoUrl = '', token = '';
+  try { token = localStorage.getItem('sh-admin') || ''; } catch(e){}
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function toast(m, bad){ var t = $('#toast'); t.textContent = m; t.className = 'toast on' + (bad ? ' err' : ''); clearTimeout(toast.t); toast.t = setTimeout(function(){ t.className = 'toast'; }, 3200); }
+  function show(id){ ['vLogin','vList','vEdit'].forEach(function(v){ $('#' + v).hidden = v !== id; }); window.scrollTo(0, 0); }
+  function hoy(){ return new Date().toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' }); }
+
+  function api(path, opt){
+    opt = opt || {}; opt.headers = Object.assign({ 'Content-Type':'application/json' }, token ? { Authorization:'Bearer ' + token } : {}, opt.headers || {});
+    return fetch(path, opt).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(d){
+        if (r.status === 401 && path.indexOf('/api/login') < 0){ salir(true); throw new Error('Tu sesión venció. Entrá de nuevo.'); }
+        if (!r.ok) throw new Error(d.error || 'Algo salió mal');
+        return d;
+      });
+    });
+  }
+  function confirmar(t, p, si){
+    return new Promise(function(ok){
+      var d = $('#dlg'); $('#dT').textContent = t; $('#dP').textContent = p; $('#dSi').textContent = si || 'Sí';
+      var done = function(v){ d.close(); $('#dSi').onclick = $('#dNo').onclick = null; ok(v); };
+      $('#dSi').onclick = function(){ done(true); }; $('#dNo').onclick = function(){ done(false); };
+      d.showModal();
+    });
+  }
+
+  /* ---------- Reconocer el link del video ---------- */
+  function detectar(u){
+    u = (u || '').trim(); var m;
+    if (!u) return null;
+    if ((m = u.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/))) return { red:'YouTube', poster:'https://i.ytimg.com/vi/' + m[1] + '/hqdefault.jpg', vert:/\/shorts\//.test(u) };
+    if (/vimeo\.com\/(?:video\/)?\d+/.test(u)) return { red:'Vimeo' };
+    if (/instagram\.com\/(?:[\w.]+\/)?(p|reels?|tv)\/[\w-]+/.test(u)) return { red:'Instagram', vert:true };
+    if (/facebook\.com|fb\.watch|fb\.com/.test(u)) return { red:'Facebook', vert:/\/reel\//.test(u) };
+    if (/\.(mp4|webm|mov)(\?|#|$)/i.test(u)) return { red:'Video' };
+    return { red:'' };
+  }
+
+  /* ---------- Lista ---------- */
+  function drawList(){
+    var pub = notas.filter(function(n){ return n.publicada !== false; }).length;
+    $('#stats').innerHTML = '<div class="stat"><b>' + pub + '</b>publicadas</div><div class="stat"><b>' + (notas.length - pub) + '</b>borradores</div>';
+    if (!notas.length){
+      $('#list').innerHTML = '<div class="empty"><b>Todavía no cargaste ninguna nota</b><p>Empezá con tu primera: un título, el link del video y el texto.</p><button class="btn gold" data-a="nueva">＋ Nueva nota</button></div>';
+      return;
+    }
+    $('#list').innerHTML = notas.map(function(n, i){
+      var d = n.video ? detectar(n.video) : null, th = n.foto || (d && d.poster) || '';
+      return '<article class="item"><div class="top"><div class="thumb" style="' + (th ? 'background-image:url(\'' + esc(th) + '\')' : '') + '">' + (d && d.red ? '<i>▶ ' + esc(d.red) + '</i>' : '') + '</div>' +
+        '<div><div class="meta"><span class="pill ' + (n.publicada !== false ? 'on">Publicada' : 'off">Borrador') + '</span><span>' + esc(n.seccion) + '</span></div>' +
+        '<h3>' + esc(n.titulo) + '</h3><div class="meta">' + esc(n.fecha || 'Sin fecha') + '</div></div></div>' +
+        '<div class="acts"><button class="btn sm gold" data-a="editar" data-i="' + i + '">Editar</button>' +
+        (n.publicada !== false ? '<a class="btn sm" href="/#/nota/' + n.id + '" target="_blank" rel="noopener">Ver</a>' : '') +
+        (i > 0 ? '<button class="btn sm" data-a="primera" data-i="' + i + '">⭐ Poner primera</button>' : '') +
+        '<button class="btn sm" data-a="toggle" data-i="' + i + '">' + (n.publicada !== false ? 'Pasar a borrador' : 'Publicar') + '</button>' +
+        '<button class="btn sm danger" data-a="borrar" data-i="' + i + '">Eliminar</button></div></article>';
+    }).join('');
+  }
+  function guardarTodo(msg){
+    return api('/api/contenido', { method:'PUT', body: JSON.stringify({ notas: notas }) }).then(function(d){ notas = d.notas; drawList(); if (msg) toast(msg); });
+  }
+  function cargar(){
+    return api('/api/contenido?admin=1').then(function(d){ notas = d.notas || []; drawList(); show('vList'); });
+  }
+
+  /* ---------- Editor ---------- */
+  function abrir(i){
+    cur = i == null ? { id: Date.now(), creada: Date.now(), publicada: false } : Object.assign({}, notas[i]);
+    cur._i = i;
+    $('#edTitulo').textContent = i == null ? 'Nueva nota' : 'Editar nota';
+    $('#titulo').value = cur.titulo || ''; $('#bajada').value = cur.bajada || ''; $('#video').value = cur.video || '';
+    $('#texto').value = (cur.texto || []).join('\n\n');
+    var last = ''; try { last = localStorage.getItem('sh-autor') || ''; } catch(e){}
+    $('#autor').value = cur.autor || last || 'Redacción';
+    fotoUrl = cur.foto || '';
+    $('#secs').innerHTML = SECS.map(function(s){ return '<label><input type="radio" name="sec" value="' + s + '"' + ((cur.seccion || 'Entrevistas') === s ? ' checked' : '') + '><span>' + s + '</span></label>'; }).join('');
+    $('#bPublicar').textContent = cur.publicada ? 'Guardar cambios' : 'Publicar';
+    $('#bBorrador').hidden = !!cur.publicada;
+    drawFoto(); drawChk(); drawPrev(); show('vEdit');
+  }
+  function drawChk(){
+    var d = detectar($('#video').value), el = $('#vChk');
+    if (!d){ el.className = 'chk'; el.textContent = 'Sin video: la nota se verá con la foto de portada.'; return; }
+    if (d.red){
+      el.className = 'chk ok'; el.textContent = '✓ Link de ' + d.red + ' reconocido' + (!d.poster && !fotoUrl ? ' · subí una foto de portada (paso 3)' : '');
+    } else { el.className = 'chk warn'; el.textContent = '⚠ No reconozco este link. Se mostrará un botón “Ver el video” que lo abre.'; }
+  }
+  function drawFoto(){
+    var d = detectar($('#video').value), pv = $('#fotoPv'), src = fotoUrl || (d && d.poster) || '';
+    pv.style.backgroundImage = src ? 'url("' + src.replace(/"/g, '%22') + '")' : '';
+    pv.className = 'pv' + (src ? ' has' : ''); pv.textContent = src ? '' : 'Todavía no hay foto';
+    $('#fotoQuitar').hidden = !fotoUrl;
+    $('#fotoHint').textContent = fotoUrl ? 'Esta es la portada que elegiste.' : (d && d.poster ? 'Se usa la miniatura de YouTube. Podés subir otra si querés.' : 'Es la imagen que se ve antes de tocar el play.');
+  }
+  function leerForm(){
+    var sec = document.querySelector('input[name=sec]:checked');
+    return {
+      id: cur.id, creada: cur.creada, fecha: cur.fecha || '',
+      titulo: $('#titulo').value.trim(), bajada: $('#bajada').value.trim(), video: $('#video').value.trim(), foto: fotoUrl,
+      texto: $('#texto').value.split(/\n\s*\n/).map(function(p){ return p.replace(/\s*\n\s*/g, ' ').trim(); }).filter(Boolean),
+      seccion: sec ? sec.value : 'Entrevistas', autor: $('#autor').value.trim() || 'Redacción'
+    };
+  }
+  function drawPrev(){
+    var n = leerForm(), d = detectar(n.video), poster = n.foto || (d && d.poster) || '';
+    var vid = n.video
+      ? '<div class="vid' + (d && d.vert ? ' v' : '') + '" style="' + (poster ? 'background-image:url(\'' + esc(poster) + '\')' : '') + '"><em><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></em></div>'
+      : (poster ? '<div class="vid" style="background-image:url(\'' + esc(poster) + '\')"></div>' : '<div class="vid none">Acá va el video</div>');
+    $('#prevCard').innerHTML = '<div class="k">' + esc(n.seccion) + '</div><h3>' + (esc(n.titulo) || '<span style="color:var(--muted)">Tu título</span>') + '</h3>' +
+      (n.bajada ? '<p class="dek">' + esc(n.bajada) + '</p>' : '') + vid +
+      '<div class="txt">' + (n.texto.length ? n.texto.slice(0, 3).map(function(p){ return '<p>' + esc(p) + '</p>'; }).join('') + (n.texto.length > 3 ? '<p class="hint">…</p>' : '') : '<p class="hint">Acá abajo va el texto de la nota.</p>') + '</div>';
+  }
+  function guardarNota(publicar){
+    var n = leerForm();
+    if (!n.titulo){ toast('Falta el título de la nota', true); $('#titulo').focus(); return; }
+    if (!n.video && !n.foto && !n.texto.length){ toast('Agregá al menos un video, una foto o el texto', true); return; }
+    n.publicada = publicar ? true : (cur.publicada === true);
+    if (n.publicada && !n.fecha) n.fecha = hoy();
+    try { localStorage.setItem('sh-autor', n.autor); } catch(e){}
+    var i = cur._i; var lista = notas.slice();
+    if (i == null) lista.unshift(n); else lista[i] = n;
+    notas = lista;
+    var b1 = $('#bPublicar'), b2 = $('#bBorrador'); b1.disabled = b2.disabled = true;
+    guardarTodo().then(function(){
+      toast(n.publicada ? '¡Listo! La nota ya está publicada ✓' : 'Borrador guardado ✓');
+      show('vList');
+    }).catch(function(e){ toast(e.message, true); cargar().catch(function(){}); }).then(function(){ b1.disabled = b2.disabled = false; });
+  }
+
+  /* ---------- Foto: se achica en el celular antes de subirla ---------- */
+  function achicar(file){
+    return new Promise(function(ok, bad){
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function(){
+        var max = 1600, k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        ok(c.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); bad(new Error('No pude abrir esa imagen')); };
+      img.src = url;
+    });
+  }
+
+  /* ---------- Sesión ---------- */
+  function salir(silencio){
+    token = ''; try { localStorage.removeItem('sh-admin'); } catch(e){}
+    show('vLogin'); $('#pw').value = ''; if (!silencio) $('#eLogin').textContent = '';
+  }
+
+  /* ---------- Eventos ---------- */
+  $('#fLogin').addEventListener('submit', function(e){
+    e.preventDefault(); var b = $('#bLogin'); b.disabled = true; $('#eLogin').textContent = '';
+    api('/api/login', { method:'POST', body: JSON.stringify({ password: $('#pw').value }) }).then(function(d){
+      token = d.token; try { localStorage.setItem('sh-admin', token); } catch(x){}
+      return cargar();
+    }).catch(function(err){ $('#eLogin').textContent = err.message; }).then(function(){ b.disabled = false; });
+  });
+  $('#bSalir').onclick = function(){ salir(); };
+  $('#bNueva').onclick = function(){ abrir(null); };
+  $('#bVolver').onclick = function(){ confirmar('¿Salir sin guardar?', 'Los cambios que hiciste en esta nota se van a perder.', 'Salir').then(function(v){ if (v) show('vList'); }); };
+  $('#bPublicar').onclick = function(){ guardarNota(true); };
+  $('#bBorrador').onclick = function(){ guardarNota(false); };
+  ['titulo','bajada','texto','autor'].forEach(function(id){ $('#' + id).addEventListener('input', drawPrev); });
+  $('#video').addEventListener('input', function(){ drawChk(); drawFoto(); drawPrev(); });
+  $('#secs').addEventListener('change', drawPrev);
+  $('#fotoQuitar').onclick = function(){ fotoUrl = ''; drawFoto(); drawChk(); drawPrev(); };
+  $('#fotoIn').addEventListener('change', function(){
+    var f = this.files[0]; this.value = ''; if (!f) return;
+    $('#fotoPv').textContent = 'Subiendo foto…';
+    achicar(f).then(function(data){ return api('/api/subir', { method:'POST', body: JSON.stringify({ dataUrl: data }) }); })
+      .then(function(d){ fotoUrl = d.url; drawFoto(); drawChk(); drawPrev(); toast('Foto subida ✓'); })
+      .catch(function(e){ drawFoto(); toast(e.message, true); });
+  });
+  $('#list').addEventListener('click', function(e){
+    var b = e.target.closest('[data-a]'); if (!b) return;
+    var a = b.getAttribute('data-a'), i = +b.getAttribute('data-i'), n = notas[i];
+    if (a === 'nueva') return abrir(null);
+    if (a === 'editar') return abrir(i);
+    if (a === 'primera'){ notas.unshift(notas.splice(i, 1)[0]); return guardarTodo('Ahora es la primera de la portada ✓').catch(function(x){ toast(x.message, true); }); }
+    if (a === 'toggle'){
+      n.publicada = n.publicada === false; if (n.publicada && !n.fecha) n.fecha = hoy();
+      return guardarTodo(n.publicada ? 'Nota publicada ✓' : 'Pasó a borrador ✓').catch(function(x){ toast(x.message, true); });
+    }
+    if (a === 'borrar') confirmar('¿Eliminar esta nota?', '“' + n.titulo + '” se borra para siempre y deja de verse en la web.', 'Eliminar').then(function(v){
+      if (!v) return; notas.splice(i, 1); guardarTodo('Nota eliminada').catch(function(x){ toast(x.message, true); });
+    });
+  });
+
+  /* ---------- Inicio ---------- */
+  if (token) cargar().catch(function(){ show('vLogin'); }); else show('vLogin');
+})();
+</script>
+</body>
+</html>
