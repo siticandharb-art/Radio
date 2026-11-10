@@ -5,11 +5,15 @@ import { put, list, del } from '@vercel/blob';
 export const SECCIONES_DEF = ['Música', 'Entrevistas', 'Mundo', 'Actualidad', 'Comunidad'];
 export const PROGRAMAS_DEF = ['Miradas', 'Voces del Mundo', 'UnArtículo', 'Happy'];
 export const FUENTES_DEF = [
-  { nombre: 'Infobae', url: 'https://www.infobae.com/arc/outboundfeeds/rss/', seccion: 'Actualidad' },
-  { nombre: 'La Nación', url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml', seccion: 'Actualidad' },
-  { nombre: 'Clarín', url: 'https://www.clarin.com/rss/lo-ultimo/', seccion: 'Actualidad' },
   { nombre: 'BBC Mundo', url: 'https://feeds.bbci.co.uk/mundo/rss.xml', seccion: 'Mundo' },
   { nombre: 'DW Español', url: 'https://rss.dw.com/xml/rss-sp-all', seccion: 'Mundo' },
+  { nombre: 'France 24', url: 'https://www.france24.com/es/rss', seccion: 'Mundo' },
+  { nombre: 'El País', url: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/internacional/portada', seccion: 'Mundo' },
+  { nombre: 'Clarín', url: 'https://www.clarin.com/rss/ciudades/', seccion: 'Buenos Aires' },
+  { nombre: 'La Nación', url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/sociedad/?outputType=xml', seccion: 'Buenos Aires' },
+  { nombre: 'Infobae', url: 'https://www.infobae.com/arc/outboundfeeds/rss/category/sociedad/', seccion: 'Buenos Aires' },
+  { nombre: 'El Deber', url: 'https://www.eldeber.com.bo/rss/feed', seccion: 'Bolivia' },
+  { nombre: 'Opinión', url: 'https://www.opinion.com.bo/rss/', seccion: 'Bolivia' },
 ];
 const secret = () => crypto.createHash('sha256').update('radio-admin|' + (process.env.ADMIN_PASSWORD || '')).digest();
 const digest = (s) => crypto.createHash('sha256').update(String(s)).digest();

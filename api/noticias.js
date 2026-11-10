@@ -68,8 +68,8 @@ export default async function handler(req, res) {
     // Orden por fecha, pero mezclando medios para que no copen uno solo
     items.sort((a, b) => b.fecha - a.fecha);
     const cuenta = {}; const mezcla = [];
-    for (const it of items) { cuenta[it.fuente] = (cuenta[it.fuente] || 0) + 1; if (cuenta[it.fuente] <= 5) mezcla.push(it); }
-    items = mezcla.slice(0, 40);
+    for (const it of items) { cuenta[it.fuente] = (cuenta[it.fuente] || 0) + 1; if (cuenta[it.fuente] <= (/Bolivia/.test(it.seccion) ? 4 : 6)) mezcla.push(it); }
+    items = mezcla.slice(0, 45);
     const estado = fuentes.map((f, i) => ({ nombre: f.nombre, ok: resultados[i].ok, cantidad: resultados[i].items.length }));
     res.setHeader('Cache-Control', req.query.admin && sesionOk(req) ? 'no-store' : 'public, s-maxage=1800, stale-while-revalidate=3600');
     return json(res, 200, { actualizado: Date.now(), items, fuentes: estado });

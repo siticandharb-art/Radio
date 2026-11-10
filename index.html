@@ -445,6 +445,7 @@
     var real = d && Array.isArray(d.notas) ? d.notas : [];
     /* Noticias de otros medios: se muestran como notas, siempre con la fuente */
     var ext = (nw && Array.isArray(nw.items) ? nw.items : []).map(function(n){
+      if (n.seccion && SECCIONES.indexOf(n.seccion) < 0) SECCIONES.push(n.seccion); /* ej. "Buenos Aires" o "Bolivia" */
       var sec = SECCIONES.indexOf(n.seccion) >= 0 ? n.seccion : (SECCIONES.indexOf('Actualidad') >= 0 ? 'Actualidad' : SECCIONES[0]);
       return { id: n.id, titulo: n.titulo, bajada: n.resumen, seccion: sec, programa: '', fuente: n.fuente, link: n.link, foto: n.foto, fecha: fecha(n.fecha), texto: [] };
     });
