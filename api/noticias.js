@@ -4,7 +4,8 @@ import crypto from 'node:crypto';
 import { leer, json, sesionOk } from './_lib.js';
 
 const UA = 'SitticHarbRadio/1.0 (+https://sitticandharbradio.lat)';
-const MAX_POR_FUENTE = 8;
+const MAX_POR_FUENTE = 12;
+const REGIONAL = /infobae\.com\/(colombia|mexico|peru|venezuela|cuba|chile|espana|centroamerica)\//i;
 
 const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', hellip: '…', laquo: '«', raquo: '»', ndash: '–', mdash: '—', ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’' };
 function decode(s) {
@@ -34,6 +35,7 @@ export function parse(xml, fuente) {
     let link = texto(tag(b, ['link'])) || attr(b, /<link[^>]*rel=["']alternate["'][^>]*href=["']([^"']+)["']/i) || attr(b, /<link[^>]*href=["']([^"']+)["']/i);
     if (!link) { const g = texto(tag(b, ['guid'])); if (/^https?:\/\//.test(g)) link = g; }
     if (!titulo || !http(link)) continue;
+    if (REGIONAL.test(link)) continue; // ediciones de otros países (ej. Infobae Colombia/México)
     const cuerpo = tag(b, ['description', 'summary', 'content:encoded', 'content']);
     const fechaTxt = texto(tag(b, ['pubDate', 'published', 'updated', 'dc:date']));
     const fecha = Date.parse(fechaTxt) || 0;
@@ -41,7 +43,8 @@ export function parse(xml, fuente) {
       attr(b, /<enclosure[^>]*type=["']image[^"']*["'][^>]*url=["']([^"']+)["']/i) || attr(b, /<enclosure[^>]*url=["']([^"']+\.(?:jpe?g|png|webp)[^"']*)["']/i) ||
       attr(decode(cuerpo), /<img[^>]*src=["']([^"']+)["']/i));
     const id = 'm' + crypto.createHash('sha1').update(link.split('?')[0]).digest('hex').slice(0, 10);
-    out.push({ id, seccion: fuente.seccion || '', fuente: fuente.nombre, titulo: recortar(titulo, 200), link, resumen: recortar(texto(cuerpo), 220), foto, fecha });
+    const fotoGrande = foto.replace(/(ichef\.bbci\.co\.uk\/ace\/ws\/)\d+\//, '$1800/');
+    out.push({ id, seccion: fuente.seccion || '', fuente: fuente.nombre, titulo: recortar(titulo, 200), link, resumen: recortar(texto(cuerpo), 220), foto: fotoGrande, fecha });
   }
   return out;
 }

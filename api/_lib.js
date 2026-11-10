@@ -8,7 +8,6 @@ export const FUENTES_DEF = [
   { nombre: 'Infobae', url: 'https://www.infobae.com/arc/outboundfeeds/rss/', seccion: 'Actualidad' },
   { nombre: 'La Nación', url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml', seccion: 'Actualidad' },
   { nombre: 'Clarín', url: 'https://www.clarin.com/rss/lo-ultimo/', seccion: 'Actualidad' },
-  { nombre: 'Página/12', url: 'https://www.pagina12.com.ar/rss/portada', seccion: 'Actualidad' },
   { nombre: 'BBC Mundo', url: 'https://feeds.bbci.co.uk/mundo/rss.xml', seccion: 'Mundo' },
   { nombre: 'DW Español', url: 'https://rss.dw.com/xml/rss-sp-all', seccion: 'Mundo' },
 ];
