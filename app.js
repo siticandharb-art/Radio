@@ -193,7 +193,7 @@
     if (p[0] === 'programas' || p[0] === 'historia' || p[0] === 'redes') return { v:p[0], a:null };
     return { v:'home', a:null };
   }
-  var CHIPS = ['Últimas', 'Videos'].concat(CATS, ['Programas', 'Redes']);
+  var CHIPS = ['Últimas', 'Videos'].concat(CATS.filter(function(c){ return inCat(c).length; }), ['Programas', 'Redes']); /* solo secciones con notas */
   var CHIP_GO = { 'Últimas':'home', 'Videos':'videos', 'Programas':'programas', 'Redes':'redes' };
   function drawTabs(){
     var on = cur.v === 'cat' ? cur.a : ({ home:'Últimas', videos:'Videos', programas:'Programas', redes:'Redes' })[cur.v] || '';
@@ -246,7 +246,7 @@
     h += '<div class="ov-l">Secciones</div>';
     h += '<details><summary>Últimas noticias</summary><div class="sub">' + A.slice(0,3).map(function(a){ return '<a data-go="nota:' + a.id + '">' + esc(a.titulo) + '</a>'; }).join('') + '<button class="all" data-go="cat:Últimas">Ver todas ›</button></div></details>';
     CATS.forEach(function(c){
-      var l = inCat(c).slice(0,2);
+      var l = inCat(c).slice(0,2); if (!l.length) return;
       h += '<details><summary>' + esc(c) + '</summary><div class="sub">' + l.map(function(a){ return '<a data-go="nota:' + a.id + '">' + esc(a.titulo) + '</a>'; }).join('') + '<button class="all" data-go="cat:' + esc(c) + '">Ver todo en ' + esc(c) + ' ›</button></div></details>';
     });
     h += '<details><summary>Videos</summary><div class="sub">' + V.slice(0,3).map(function(v){ return '<a href="' + esc(v.link || S.instagram) + '" target="_blank" rel="noopener">' + esc(v.titulo) + '</a>'; }).join('') + '<button class="all" data-go="videos">Ver todos los videos ›</button></div></details>';
