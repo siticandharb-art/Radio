@@ -20,7 +20,8 @@ var SITIO = {
   facebook:  '',   // pegá acá el link de la página de Facebook
   mail:      '',   // ej: 'contacto@sitticharbradio.com'
   whatsapp:  '',   // solo números con código de país, ej: '5491112345678'
-  formulario:''    // link de Formspree (https://formspree.io/f/xxxx). Vacío = se envía por WhatsApp, mail o Instagram
+  formulario:'',   // link de Formspree (https://formspree.io/f/xxxx). Vacío = se envía por WhatsApp, mail o Instagram
+  radio:     ''    // link https de la transmisión en vivo (vacío = no se muestra el reproductor)
 };
 
 var SECCIONES = ['Música', 'Entrevistas', 'Mundo', 'Actualidad', 'Comunidad'];

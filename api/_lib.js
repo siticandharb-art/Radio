@@ -4,6 +4,14 @@ import { put, list, del } from '@vercel/blob';
 
 export const SECCIONES_DEF = ['Música', 'Entrevistas', 'Mundo', 'Actualidad', 'Comunidad'];
 export const PROGRAMAS_DEF = ['Miradas', 'Voces del Mundo', 'UnArtículo', 'Happy'];
+export const FUENTES_DEF = [
+  { nombre: 'Infobae', url: 'https://www.infobae.com/arc/outboundfeeds/rss/' },
+  { nombre: 'La Nación', url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml' },
+  { nombre: 'Clarín', url: 'https://www.clarin.com/rss/lo-ultimo/' },
+  { nombre: 'Página/12', url: 'https://www.pagina12.com.ar/rss/portada' },
+  { nombre: 'BBC Mundo', url: 'https://feeds.bbci.co.uk/mundo/rss.xml' },
+  { nombre: 'DW Español', url: 'https://rss.dw.com/xml/rss-sp-all' },
+];
 const secret = () => crypto.createHash('sha256').update('radio-admin|' + (process.env.ADMIN_PASSWORD || '')).digest();
 const digest = (s) => crypto.createHash('sha256').update(String(s)).digest();
 
@@ -36,13 +44,14 @@ async function versiones() {
 
 export async function leer() {
   const [ultima] = await versiones();
-  if (!ultima) return { notas: [], programas: PROGRAMAS_DEF, secciones: SECCIONES_DEF };
+  if (!ultima) return { notas: [], programas: PROGRAMAS_DEF, secciones: SECCIONES_DEF, fuentes: FUENTES_DEF };
   const r = await fetch(ultima.url, { cache: 'no-store' });
   const d = await r.json();
   return {
     notas: Array.isArray(d.notas) ? d.notas : [],
     programas: limpiarLista(d.programas, PROGRAMAS_DEF, 0),
     secciones: limpiarLista(d.secciones, SECCIONES_DEF, 1),
+    fuentes: Array.isArray(d.fuentes) ? limpiarFuentes(d.fuentes) : FUENTES_DEF,
   };
 }
 
@@ -63,6 +72,17 @@ export function limpiarLista(v, def, min) {
   for (const x of v) { const t = str(x, 40); if (t && !out.some((o) => o.toLowerCase() === t.toLowerCase())) out.push(t); }
   const lista = out.slice(0, 20);
   return lista.length < min ? def : lista;
+}
+
+// Medios de los que se toman titulares (RSS). Solo links https.
+export function limpiarFuentes(v) {
+  if (!Array.isArray(v)) return FUENTES_DEF;
+  const out = [];
+  for (const f of v) {
+    const nombre = str(f && f.nombre, 40), url = str(f && f.url, 500);
+    if (nombre && /^https:\/\/[^\s]+$/i.test(url) && !out.some((o) => o.url === url)) out.push({ nombre, url });
+  }
+  return out.slice(0, 15);
 }
 
 export function limpiarNota(n, secciones = SECCIONES_DEF, programas = PROGRAMAS_DEF) {

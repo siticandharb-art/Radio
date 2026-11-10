@@ -109,6 +109,36 @@
   }
 
   /* ---------- Vistas ---------- */
+  /* ---------- Noticias de otros medios (RSS, con link a la nota original) ---------- */
+  var NEWS = null, newsP = null;
+  function loadNews(){
+    if (!newsP) newsP = fetch('/api/noticias').then(function(r){ return r.ok ? r.json() : { items: [] }; }).then(function(d){ NEWS = d.items || []; return NEWS; }).catch(function(){ NEWS = []; return NEWS; });
+    return newsP;
+  }
+  function hace(ms){
+    if (!ms) return ''; var m = Math.round((Date.now() - ms) / 60000);
+    if (m < 1) return 'Recién'; if (m < 60) return 'Hace ' + m + ' min'; var h = Math.round(m / 60); if (h < 24) return 'Hace ' + h + ' h';
+    try { return new Date(ms).toLocaleDateString('es-AR', { day:'numeric', month:'short' }); } catch(e){ return ''; }
+  }
+  function ncard(n){
+    return '<article class="ncard"><a href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">' +
+      (n.foto ? '<span class="nimg"><img src="' + esc(n.foto) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.remove()"></span>' : '') +
+      '<span class="nt"><span class="kicker">' + esc(n.fuente) + '</span><h3>' + esc(n.titulo) + '</h3>' + (n.resumen ? '<p>' + esc(n.resumen) + '</p>' : '') +
+      '<span class="nm">' + esc(hace(n.fecha)) + (n.fecha ? ' · ' : '') + 'Leer en ' + esc(n.fuente) + ' ↗</span></span></a></article>';
+  }
+  var NEWS_NOTA = '<p class="nnote">Titulares y resúmenes publicados por cada medio. Al tocar una noticia vas a la nota original en su sitio: los derechos pertenecen a cada medio.</p>';
+  function fillNews(){
+    var home = document.getElementById('newsHome'), list = document.getElementById('newsList');
+    if (!home && !list) return;
+    loadNews().then(function(items){
+      if (home){ if (!items.length){ var s = home.closest('section'); if (s) s.remove(); } else home.innerHTML = items.slice(0, 6).map(ncard).join(''); }
+      if (list) list.innerHTML = items.length ? items.map(ncard).join('') : '<p class="empty">No pudimos cargar las noticias en este momento. Probá de nuevo en un rato.</p>';
+    });
+  }
+  function vMedios(){
+    return '<div class="view"><h1 class="vt">Otros medios</h1>' + NEWS_NOTA + '<div class="ngrid" id="newsList"><p class="empty">Cargando noticias…</p></div></div>';
+  }
+
   function vHome(){
     var lead = A[0], p1 = A[2] || A[1], p2 = A[5] || A[3];
     var secs = CATS.filter(function(c){ return inCat(c).length > 1; }).slice(0, 3);
@@ -124,6 +154,7 @@
     '</div>' +
     (V.length ? '<div class="vdesk">' + strip + '</div>' : '') +
     secs.map(sector).join('') +
+    '<section class="sector"><div class="sh"><h2>En otros medios</h2><button data-go="medios">Ver todas ›</button></div><div class="ngrid" id="newsHome"><p class="empty">Cargando noticias…</p></div></section>' +
     '<section class="sector"><div class="sh"><h2>Seguinos en redes</h2><button data-go="redes">Ver más ›</button></div><div class="redes">' + redesData().map(rcard).join('') + '</div></section>';
   }
   function vNota(id){
@@ -180,7 +211,7 @@
     if (v === 'nota') return '#/nota/' + a;
     if (v === 'cat') return '#/seccion/' + encodeURIComponent(a);
     if (v === 'videos') return '#/videos' + (a ? '/' + encodeURIComponent(a) : '');
-    if (v === 'programas' || v === 'historia' || v === 'redes') return '#/' + v;
+    if (v === 'programas' || v === 'historia' || v === 'redes' || v === 'medios') return '#/' + v;
     return '#/';
   }
   function parse(){
@@ -188,13 +219,13 @@
     if (p[0] === 'nota') return { v:'nota', a:a };
     if (p[0] === 'seccion') return { v:'cat', a:a };
     if (p[0] === 'videos') return { v:'videos', a:a };
-    if (p[0] === 'programas' || p[0] === 'historia' || p[0] === 'redes') return { v:p[0], a:null };
+    if (p[0] === 'programas' || p[0] === 'historia' || p[0] === 'redes' || p[0] === 'medios') return { v:p[0], a:null };
     return { v:'home', a:null };
   }
-  var CHIPS = ['Últimas', 'Videos'].concat(CATS, ['Programas', 'Redes']);
-  var CHIP_GO = { 'Últimas':'home', 'Videos':'videos', 'Programas':'programas', 'Redes':'redes' };
+  var CHIPS = ['Últimas', 'Videos', 'Otros medios'].concat(CATS, ['Programas', 'Redes']);
+  var CHIP_GO = { 'Últimas':'home', 'Videos':'videos', 'Otros medios':'medios', 'Programas':'programas', 'Redes':'redes' };
   function drawTabs(){
-    var on = cur.v === 'cat' ? cur.a : ({ home:'Últimas', videos:'Videos', programas:'Programas', redes:'Redes' })[cur.v] || '';
+    var on = cur.v === 'cat' ? cur.a : ({ home:'Últimas', videos:'Videos', medios:'Otros medios', programas:'Programas', redes:'Redes' })[cur.v] || '';
     tabsEl.innerHTML = CHIPS.map(function(c){
       var g = CHIP_GO[c] || 'cat:' + c;
       return '<button data-go="' + esc(g) + '"' + (c === on ? ' class="on" aria-current="page"' : '') + '>' + esc(c) + '</button>';
@@ -205,11 +236,11 @@
       b.classList.toggle('on', m);
     });
   }
-  var TITLES = { programas:'Programas', historia:'Contanos tu historia', redes:'Redes' };
+  var TITLES = { programas:'Programas', historia:'Contanos tu historia', redes:'Redes', medios:'Otros medios' };
   function render(){
     var v = cur.v, h;
-    if (v === 'nota') h = vNota(cur.a); else if (v === 'cat') h = vCat(cur.a); else if (v === 'programas') h = vProg(); else if (v === 'videos') h = vVideos(cur.a); else if (v === 'redes') h = vRedes(); else if (v === 'historia') h = vHist(); else h = vHome();
-    app.innerHTML = h; waves(app); focusables(app); drawTabs();
+    if (v === 'nota') h = vNota(cur.a); else if (v === 'cat') h = vCat(cur.a); else if (v === 'programas') h = vProg(); else if (v === 'videos') h = vVideos(cur.a); else if (v === 'redes') h = vRedes(); else if (v === 'historia') h = vHist(); else if (v === 'medios') h = vMedios(); else h = vHome();
+    app.innerHTML = h; waves(app); focusables(app); drawTabs(); fillNews();
     var a = v === 'nota' && byId(cur.a);
     var t = a ? a.titulo : (v === 'cat' ? cur.a : (v === 'videos' ? (cur.a || 'Videos') : TITLES[v]));
     document.title = t ? t + ' · Sittic&Harb Radio' : BASE_TITLE;
@@ -249,7 +280,8 @@
     });
     h += '<details><summary>Videos</summary><div class="sub">' + V.slice(0,3).map(function(v){ return '<a href="' + esc(v.link || S.instagram) + '" target="_blank" rel="noopener">' + esc(v.titulo) + '</a>'; }).join('') + '<button class="all" data-go="videos">Ver todos los videos ›</button></div></details>';
     h += '<details><summary>Programas</summary><div class="sub">' + P.map(function(p){ return '<a data-go="videos:' + esc(p.nombre) + '">' + esc(p.nombre) + '</a>'; }).join('') + '<button class="all" data-go="programas">Ver programas ›</button></div></details>';
-    h += '<button class="plain" data-go="historia">Contanos tu historia<span class="tag">Nuevo</span></button>';
+    h += '<button class="plain" data-go="medios">Otros medios<span class="tag">Nuevo</span></button>';
+    h += '<button class="plain" data-go="historia">Contanos tu historia</button>';
     h += '<details><summary>Redes</summary><div class="sub"><a href="' + esc(S.instagram) + '" target="_blank" rel="noopener">Instagram</a><a href="' + esc(S.youtube) + '" target="_blank" rel="noopener">YouTube</a>' + (S.facebook ? '<a href="' + esc(S.facebook) + '" target="_blank" rel="noopener">Facebook</a>' : '<a>Facebook (próximamente)</a>') + '<button class="all" data-go="redes">Ver redes ›</button></div></details>';
     h += '<details><summary>Contacto</summary><div class="sub">' + contactoSub() + '</div></details>';
     h += '<button class="plain" id="temaM">Modo oscuro<span class="sw" aria-hidden="true"><i></i></span></button>';

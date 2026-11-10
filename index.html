@@ -56,6 +56,20 @@
   /* Cabecera fija */
   .top{position:sticky;top:env(safe-area-inset-top, 0px);z-index:50;background:var(--bg);box-shadow:0 1px 0 var(--rule)}
   .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;height:62px}
+  /* Radio en vivo */
+  .live{display:flex;align-items:center;gap:12px;height:52px;border-top:1px solid var(--rule)}
+  .live-b{width:38px;height:38px;flex:none;border-radius:50%;background:var(--fg);color:var(--bg);display:grid;place-items:center}
+  .live-b svg{width:15px;height:15px;fill:currentColor}
+  .live-b .i-pause{display:none}
+  .live.on .live-b .i-play{display:none}.live.on .live-b .i-pause{display:block}
+  .live-t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+  .live-k{font:700 11px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .live-k i{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
+  .live.on .live-k i{background:#d93a2b;animation:livep 1.6s ease-in-out infinite}
+  @keyframes livep{50%{opacity:.35}}
+  .live-n{font:600 14.5px/1.2 var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .live-s{font:500 12px/1 var(--sans);color:var(--muted);flex:none}
+  @media (prefers-reduced-motion:reduce){.live.on .live-k i{animation:none}}
   .brand{display:flex;align-items:center;gap:10px;min-width:0}
   .logo{display:block;height:44px;aspect-ratio:2.262/1;background:var(--fg);-webkit-mask:var(--lg) center/contain no-repeat;mask:var(--lg) center/contain no-repeat;flex:none}
   .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -117,6 +131,20 @@
   .sec-g{align-items:start}
 
   .sector{padding-block:26px 8px}
+  /* Noticias de otros medios */
+  .ngrid{display:grid;grid-template-columns:1fr;gap:0}
+  .ncard{border-bottom:1px solid var(--rule)}
+  .ncard a{display:grid;grid-template-columns:1fr 112px;gap:16px;padding:18px 0;align-items:start;color:inherit;text-decoration:none}
+  .ncard .nimg{grid-column:2;grid-row:1;aspect-ratio:4/3;border-radius:4px;overflow:hidden;background:var(--panel)}
+  .ncard .nimg img{width:100%;height:100%;object-fit:cover;display:block}
+  .ncard .nt{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .ncard h3{font:700 19px/1.25 var(--serif)}
+  .ncard a:hover h3{text-decoration:underline;text-underline-offset:3px}
+  .ncard p{font:400 14.5px/1.45 var(--sans);color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .ncard .nm{font:500 12.5px/1.2 var(--sans);color:var(--faint)}
+  .ncard a:not(:has(.nimg)){grid-template-columns:1fr}
+  .nnote{font:400 13.5px/1.5 var(--sans);color:var(--muted);padding:12px 0 4px}
+  @media (min-width:900px){.ngrid{grid-template-columns:1fr 1fr;column-gap:40px}}
   .sh{display:flex;justify-content:space-between;align-items:baseline;border-top:3px solid var(--fg);padding-top:14px;margin-bottom:6px}
   .sh h2{font-size:27px;font-weight:800}
   .sh button{font:600 13.5px/1 var(--sans);color:var(--muted)}
@@ -337,6 +365,13 @@
       </div>
     </div>
   </div>
+  <div class="wrap" id="liveW" hidden>
+    <div class="live" id="live">
+      <button class="live-b" id="liveB" aria-label="Escuchar la radio en vivo"><svg class="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 001.5.86l12.5-7.5a1 1 0 000-1.72L8.5 3.64A1 1 0 007 4.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></svg></button>
+      <div class="live-t"><span class="live-k"><i></i>En vivo</span><span class="live-n">Sittic&amp;Harb Radio · De Argentina al mundo</span></div>
+      <span class="live-s" id="liveS" aria-live="polite"></span>
+    </div>
+  </div>
   <div class="wrap"><nav class="tabs" id="tabs" aria-label="Secciones"></nav></div>
 </div>
 
@@ -376,6 +411,34 @@
 <div class="toast" id="toast" role="status"></div>
 
 <script src="datos.js"></script>
+<script>
+/* Radio en vivo: reproductor con reconexión automática */
+(function(){
+  var src = (window.SITIO && SITIO.radio) || ''; if (!src) return;
+  var w = document.getElementById('liveW'), box = document.getElementById('live'), b = document.getElementById('liveB'), st = document.getElementById('liveS');
+  w.hidden = false;
+  var a = null, want = false, tries = 0, timer = null;
+  function say(t){ st.textContent = t || ''; }
+  function ui(on){ box.classList.toggle('on', on); b.setAttribute('aria-label', on ? 'Pausar la radio' : 'Escuchar la radio en vivo'); }
+  function connect(){
+    if (a) { a.pause(); a.removeAttribute('src'); a.load(); }
+    a = new Audio(); a.preload = 'none';
+    a.src = src + (src.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now();
+    a.addEventListener('playing', function(){ tries = 0; say(''); ui(true); });
+    a.addEventListener('waiting', function(){ if (want) say('Cargando…'); });
+    function retry(){ if (!want) return; ui(false); tries++; if (tries > 6) { say('Sin señal'); want = false; return; }
+      say('Reconectando…'); clearTimeout(timer); timer = setTimeout(connect, Math.min(1000 * tries, 5000)); }
+    a.addEventListener('error', retry); a.addEventListener('ended', retry); a.addEventListener('stalled', function(){ if (want && a.paused) retry(); });
+    say('Conectando…');
+    var p = a.play(); if (p && p.catch) p.catch(function(){ if (want) retry(); });
+    if ('mediaSession' in navigator) { try { navigator.mediaSession.metadata = new MediaMetadata({ title: 'En vivo', artist: 'Sittic&Harb Radio', artwork: [{ src: '/img/favicon.png', sizes: '512x512', type: 'image/png' }] });
+      navigator.mediaSession.setActionHandler('pause', stop); navigator.mediaSession.setActionHandler('play', start); } catch(e){} }
+  }
+  function start(){ want = true; tries = 0; connect(); }
+  function stop(){ want = false; clearTimeout(timer); if (a) { a.pause(); a.removeAttribute('src'); a.load(); } ui(false); say(''); }
+  b.addEventListener('click', function(){ want ? stop() : start(); });
+})();
+</script>
 <script>
 /* Carga las notas publicadas desde el panel (/admin) y recién después arranca la web. Si falla, se ven las de datos.js. */
 (function(){

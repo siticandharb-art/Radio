@@ -1,13 +1,13 @@
-import { sesionOk, leer, guardar, limpiarNota, limpiarLista, json } from './_lib.js';
+import { sesionOk, leer, guardar, limpiarNota, limpiarLista, limpiarFuentes, json } from './_lib.js';
 
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
-      const { notas, programas, secciones } = await leer();
+      const { notas, programas, secciones, fuentes } = await leer();
       if (req.query.admin) {
         if (!sesionOk(req)) return json(res, 401, { error: 'Sesión vencida' });
         res.setHeader('Cache-Control', 'no-store');
-        return json(res, 200, { notas, programas, secciones });
+        return json(res, 200, { notas, programas, secciones, fuentes });
       }
       res.setHeader('Cache-Control', 'public, s-maxage=5, stale-while-revalidate=10');
       return json(res, 200, { notas: notas.filter((n) => n.publicada !== false), programas, secciones });
@@ -20,9 +20,10 @@ export default async function handler(req, res) {
       const body = req.body || {};
       const secciones = limpiarLista(body.secciones === undefined ? actual.secciones : body.secciones, actual.secciones, 1);
       const programas = limpiarLista(body.programas === undefined ? actual.programas : body.programas, actual.programas, 0);
+      const fuentes = body.fuentes === undefined ? actual.fuentes : limpiarFuentes(body.fuentes);
       const notas = lista.map((n) => limpiarNota(n, secciones, programas));
-      await guardar({ notas, programas, secciones });
-      return json(res, 200, { ok: true, notas, programas, secciones });
+      await guardar({ notas, programas, secciones, fuentes });
+      return json(res, 200, { ok: true, notas, programas, secciones, fuentes });
     }
     return json(res, 405, { error: 'Método no permitido' });
   } catch (e) {
