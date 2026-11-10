@@ -5,12 +5,12 @@ import { put, list, del } from '@vercel/blob';
 export const SECCIONES_DEF = ['Música', 'Entrevistas', 'Mundo', 'Actualidad', 'Comunidad'];
 export const PROGRAMAS_DEF = ['Miradas', 'Voces del Mundo', 'UnArtículo', 'Happy'];
 export const FUENTES_DEF = [
-  { nombre: 'Infobae', url: 'https://www.infobae.com/arc/outboundfeeds/rss/' },
-  { nombre: 'La Nación', url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml' },
-  { nombre: 'Clarín', url: 'https://www.clarin.com/rss/lo-ultimo/' },
-  { nombre: 'Página/12', url: 'https://www.pagina12.com.ar/rss/portada' },
-  { nombre: 'BBC Mundo', url: 'https://feeds.bbci.co.uk/mundo/rss.xml' },
-  { nombre: 'DW Español', url: 'https://rss.dw.com/xml/rss-sp-all' },
+  { nombre: 'Infobae', url: 'https://www.infobae.com/arc/outboundfeeds/rss/', seccion: 'Actualidad' },
+  { nombre: 'La Nación', url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml', seccion: 'Actualidad' },
+  { nombre: 'Clarín', url: 'https://www.clarin.com/rss/lo-ultimo/', seccion: 'Actualidad' },
+  { nombre: 'Página/12', url: 'https://www.pagina12.com.ar/rss/portada', seccion: 'Actualidad' },
+  { nombre: 'BBC Mundo', url: 'https://feeds.bbci.co.uk/mundo/rss.xml', seccion: 'Mundo' },
+  { nombre: 'DW Español', url: 'https://rss.dw.com/xml/rss-sp-all', seccion: 'Mundo' },
 ];
 const secret = () => crypto.createHash('sha256').update('radio-admin|' + (process.env.ADMIN_PASSWORD || '')).digest();
 const digest = (s) => crypto.createHash('sha256').update(String(s)).digest();
@@ -80,7 +80,8 @@ export function limpiarFuentes(v) {
   const out = [];
   for (const f of v) {
     const nombre = str(f && f.nombre, 40), url = str(f && f.url, 500);
-    if (nombre && /^https:\/\/[^\s]+$/i.test(url) && !out.some((o) => o.url === url)) out.push({ nombre, url });
+    const seccion = str(f && f.seccion, 40);
+    if (nombre && /^https:\/\/[^\s]+$/i.test(url) && !out.some((o) => o.url === url)) out.push({ nombre, url, seccion });
   }
   return out.slice(0, 15);
 }

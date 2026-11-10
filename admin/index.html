@@ -119,6 +119,10 @@ textarea{resize:vertical;min-height:120px;line-height:1.55}
 .orow input{flex:1}
 .orow button{flex:none;width:52px;min-height:52px;border-radius:12px;border:1.5px solid var(--rule);background:var(--bg);color:var(--bad);font-size:18px}
 .oadd{display:flex;gap:8px;margin-top:12px}.oadd input{flex:1}
+.frow{border:1.5px solid var(--rule);border-radius:12px;padding:10px;margin-bottom:10px;display:grid;grid-template-columns:1fr 52px;gap:8px}
+.frow input{min-width:0}.frow .fu{grid-column:1}.frow button{grid-column:2;grid-row:1/3;border-radius:12px;border:1.5px solid var(--rule);background:var(--bg);color:var(--bad);font-size:18px}
+.frow .ok{grid-column:1/3;font-size:13px;color:var(--muted)}
+.ofue{display:grid;gap:8px;margin-top:12px}
 .pill.pg{background:var(--rule);color:var(--fg)}
 dialog{border:0;border-radius:18px;padding:24px;max-width:380px;width:calc(100% - 32px);background:var(--card);color:var(--fg);box-shadow:var(--shadow)}
 dialog::backdrop{background:rgba(0,0,0,.55)}
@@ -152,7 +156,7 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
       <h1>Tus notas</h1>
       <p>Tocá <b>Nueva nota</b> para cargar un video con su título y su texto. Se publica en la web al instante.</p>
       <button class="btn gold big" id="bNueva">＋ Nueva nota</button>
-      <button class="btn big ghost" id="bOrg" style="margin-top:10px;min-height:48px;font-size:16px">⚙ Secciones y programas</button>
+      <button class="btn big ghost" id="bOrg" style="margin-top:10px;min-height:48px;font-size:16px">⚙ Secciones, programas y diarios</button>
       <div class="stats" id="stats"></div>
     </section>
     <section class="list" id="list"></section>
@@ -170,6 +174,9 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
       <div class="oadd"><input type="text" id="addProg" maxlength="40" placeholder="Nuevo programa…"><button class="btn" id="bAddProg">Agregar</button></div></section>
     <section class="step"><h2>Secciones</h2><p class="sub">Los temas de la web: Música, Mundo, etc. Aparecen en el menú de arriba.</p><div id="orgSec"></div>
       <div class="oadd"><input type="text" id="addSec" maxlength="40" placeholder="Nueva sección…"><button class="btn" id="bAddSec">Agregar</button></div></section>
+    <section class="step"><h2>Noticias de otros diarios</h2><p class="sub">La web toma solas las últimas noticias de estos diarios y las muestra como notas, con “Fuente: …” y el link a la nota completa. Para sumar un diario, poné su nombre y el link de su RSS.</p><div id="orgFue"></div>
+      <div class="ofue"><input type="text" id="addFueN" maxlength="40" placeholder="Nombre del diario"><input type="url" id="addFueU" inputmode="url" placeholder="Link del RSS (https://…)"><button class="btn" id="bAddFue">Agregar</button></div>
+      <p class="sub" id="fueEstado" style="margin-top:10px"></p></section>
   </div></div>
   <div class="foot"><div class="wrap"><button class="btn gold" id="bOrgGuardar">Guardar cambios</button></div></div>
 </div>
@@ -248,7 +255,7 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
 
 <script>
 (function(){
-  var SECS = ['Música','Entrevistas','Mundo','Actualidad','Comunidad'], PROGS = ['Miradas','Voces del Mundo','UnArtículo','Happy'];
+  var SECS = ['Música','Entrevistas','Mundo','Actualidad','Comunidad'], PROGS = ['Miradas','Voces del Mundo','UnArtículo','Happy'], FUENTES = null;
   var $ = function(s){ return document.querySelector(s); };
   var notas = [], cur = null, fotoUrl = '', token = '';
   try { token = localStorage.getItem('sh-admin') || ''; } catch(e){}
@@ -289,7 +296,7 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     return { red:'' };
   }
 
-  function aplicar(d){ notas = d.notas || []; if (d.secciones && d.secciones.length) SECS = d.secciones; if (Array.isArray(d.programas)) PROGS = d.programas; }
+  function aplicar(d){ notas = d.notas || []; if (d.secciones && d.secciones.length) SECS = d.secciones; if (Array.isArray(d.programas)) PROGS = d.programas; if (Array.isArray(d.fuentes)) FUENTES = d.fuentes; }
 
   /* ---------- Lista ---------- */
   function drawList(){
@@ -312,7 +319,7 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
     }).join('');
   }
   function guardarTodo(msg){
-    return api('/api/contenido', { method:'PUT', body: JSON.stringify({ notas: notas, programas: PROGS, secciones: SECS }) }).then(function(d){ aplicar(d); drawList(); if (msg) toast(msg); });
+    return api('/api/contenido', { method:'PUT', body: JSON.stringify(FUENTES ? { notas: notas, programas: PROGS, secciones: SECS, fuentes: FUENTES } : { notas: notas, programas: PROGS, secciones: SECS }) }).then(function(d){ aplicar(d); drawList(); if (msg) toast(msg); });
   }
   function cargar(){
     return api('/api/contenido?admin=1').then(function(d){ aplicar(d); drawList(); show('vList'); });
@@ -400,17 +407,30 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
   }
 
   /* ---------- Secciones y programas ---------- */
-  var org = { prog: [], sec: [] };
+  var org = { prog: [], sec: [], fue: [] }, fueOk = {};
   function drawOrg(){
     [['prog', '#orgProg'], ['sec', '#orgSec']].forEach(function(k){
       $(k[1]).innerHTML = org[k[0]].length ? org[k[0]].map(function(it, i){
         return '<div class="orow"><input type="text" maxlength="40" value="' + esc(it.n) + '" data-k="' + k[0] + '" data-i="' + i + '" aria-label="Nombre"><button type="button" data-del="' + k[0] + ':' + i + '" aria-label="Quitar">✕</button></div>';
       }).join('') : '<p style="color:var(--muted);font-size:14px">Todavía no hay ninguno.</p>';
     });
+    $('#orgFue').innerHTML = org.fue.length ? org.fue.map(function(f, i){
+      var e = fueOk[f.nombre];
+      return '<div class="frow"><input type="text" maxlength="40" value="' + esc(f.nombre) + '" data-f="nombre" data-i="' + i + '" aria-label="Nombre del diario">' +
+        '<input class="fu" type="url" value="' + esc(f.url) + '" data-f="url" data-i="' + i + '" aria-label="Link del RSS">' +
+        '<button type="button" data-delf="' + i + '" aria-label="Quitar">✕</button>' +
+        (e ? '<span class="ok">' + (e.ok && e.cantidad ? '✓ Funciona: ' + e.cantidad + ' noticias' : '⚠ No se pudieron leer noticias de este link') + '</span>' : '') + '</div>';
+    }).join('') : '<p style="color:var(--muted);font-size:14px">Sin diarios: no se mostrarán noticias de otros medios.</p>';
+  }
+  function probarFuentes(){
+    $('#fueEstado').textContent = 'Revisando los diarios…';
+    api('/api/noticias?admin=1').then(function(d){ fueOk = {}; (d.fuentes || []).forEach(function(f){ fueOk[f.nombre] = f; }); $('#fueEstado').textContent = ''; drawOrg(); })
+      .catch(function(){ $('#fueEstado').textContent = ''; });
   }
   function abrirOrg(){
     org.prog = PROGS.map(function(n){ return { o: n, n: n }; }); org.sec = SECS.map(function(n){ return { o: n, n: n }; });
-    $('#addProg').value = $('#addSec').value = ''; drawOrg(); show('vOrg');
+    org.fue = (FUENTES || []).map(function(f){ return { nombre: f.nombre, url: f.url, seccion: f.seccion || '' }; });
+    $('#addProg').value = $('#addSec').value = $('#addFueN').value = $('#addFueU').value = ''; drawOrg(); show('vOrg'); probarFuentes();
   }
   function agregarOrg(k, inp){
     var v = inp.value.trim(); if (!v) return;
@@ -429,6 +449,11 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
       if (renS[n.seccion]) n.seccion = renS[n.seccion]; else if (delS[n.seccion] || secs.indexOf(n.seccion) < 0) n.seccion = secs[0];
       if (n.programa){ if (renP[n.programa]) n.programa = renP[n.programa]; else if (delP[n.programa] || progs.indexOf(n.programa) < 0) n.programa = ''; }
     });
+    var fu = [];
+    for (var j = 0; j < org.fue.length; j++){ var f = org.fue[j], nm = f.nombre.trim(), u = f.url.trim(); if (!nm && !u) continue;
+      if (!nm || !/^https:\/\/\S+$/i.test(u)){ toast('Revisá el diario “' + (nm || u) + '”: necesita nombre y un link que empiece con https://', true); return; }
+      fu.push({ nombre: nm, url: u, seccion: f.seccion }); }
+    if (FUENTES || fu.length) FUENTES = fu;
     SECS = secs; PROGS = progs; var b = $('#bOrgGuardar'); b.disabled = true;
     guardarTodo('Cambios guardados ✓').then(function(){ show('vList'); }).catch(function(e){ toast(e.message, true); cargar().catch(function(){}); }).then(function(){ b.disabled = false; });
   }
@@ -438,8 +463,15 @@ dialog .row{display:flex;gap:10px}dialog .row .btn{flex:1}
   $('#bAddProg').onclick = function(){ agregarOrg('prog', $('#addProg')); };
   $('#bAddSec').onclick = function(){ agregarOrg('sec', $('#addSec')); };
   ['addProg','addSec'].forEach(function(id){ $('#' + id).addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); $('#' + (id === 'addProg' ? 'bAddProg' : 'bAddSec')).click(); } }); });
-  $('#vOrg').addEventListener('input', function(e){ var t = e.target; if (t.dataset && t.dataset.k) org[t.dataset.k][+t.dataset.i].n = t.value; });
+  $('#vOrg').addEventListener('input', function(e){ var t = e.target; if (t.dataset && t.dataset.k) org[t.dataset.k][+t.dataset.i].n = t.value; if (t.dataset && t.dataset.f) org.fue[+t.dataset.i][t.dataset.f] = t.value; });
+  $('#bAddFue').onclick = function(){
+    var n = $('#addFueN').value.trim(), u = $('#addFueU').value.trim();
+    if (!n || !/^https:\/\/\S+$/i.test(u)){ toast('Poné el nombre y un link que empiece con https://', true); return; }
+    if (org.fue.some(function(f){ return f.url === u; })){ toast('Ese diario ya está', true); return; }
+    org.fue.push({ nombre: n, url: u, seccion: '' }); $('#addFueN').value = $('#addFueU').value = ''; drawOrg();
+  };
   $('#vOrg').addEventListener('click', function(e){
+    var bf = e.target.closest('[data-delf]'); if (bf){ org.fue.splice(+bf.getAttribute('data-delf'), 1); drawOrg(); return; }
     var b = e.target.closest('[data-del]'); if (!b) return; var p = b.getAttribute('data-del').split(':');
     if (p[0] === 'sec' && org.sec.length <= 1){ toast('Tiene que quedar al menos una sección', true); return; }
     org[p[0]].splice(+p[1], 1); drawOrg();

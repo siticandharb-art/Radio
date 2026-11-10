@@ -1,5 +1,6 @@
 // Noticias de otros medios: lee los RSS que cada medio publica y devuelve título, resumen corto y link a la nota original.
 // La nota completa nunca se copia: siempre se enlaza al medio, que conserva sus derechos.
+import crypto from 'node:crypto';
 import { leer, json, sesionOk } from './_lib.js';
 
 const UA = 'SitticHarbRadio/1.0 (+https://sitticandharbradio.lat)';
@@ -39,7 +40,8 @@ export function parse(xml, fuente) {
     const foto = http(attr(b, /<media:content[^>]*url=["']([^"']+)["']/i) || attr(b, /<media:thumbnail[^>]*url=["']([^"']+)["']/i) ||
       attr(b, /<enclosure[^>]*type=["']image[^"']*["'][^>]*url=["']([^"']+)["']/i) || attr(b, /<enclosure[^>]*url=["']([^"']+\.(?:jpe?g|png|webp)[^"']*)["']/i) ||
       attr(decode(cuerpo), /<img[^>]*src=["']([^"']+)["']/i));
-    out.push({ fuente: fuente.nombre, titulo: recortar(titulo, 200), link, resumen: recortar(texto(cuerpo), 220), foto, fecha });
+    const id = 'm' + crypto.createHash('sha1').update(link.split('?')[0]).digest('hex').slice(0, 10);
+    out.push({ id, seccion: fuente.seccion || '', fuente: fuente.nombre, titulo: recortar(titulo, 200), link, resumen: recortar(texto(cuerpo), 220), foto, fecha });
   }
   return out;
 }
